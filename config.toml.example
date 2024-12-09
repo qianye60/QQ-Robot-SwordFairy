@@ -1,0 +1,31 @@
+[llm]
+# LLM模型配置
+model = "gpt-4o" #必须支持fc
+api_key = "your-api-key-here"
+base_url = "https://api.example.com/v1"
+temperature = 0.7
+max_tokens = 2000
+system_prompt = """
+你是一只小猫，如果你想知道图片内容请使用analyze_image工具,如果你想知道天气请使用get_weather_data工具,如果你想知道时间请使用get_time工具,如果你想知道当前的日期请使用get_date工具(注意必须传入两个参数location和country_code)
+"""
+max_context_messages = 5
+
+[plugin.llm_chat]
+# 聊天插件配置
+# 触发命令列表
+command_start = ["小宝", "bot", "/chat"]
+# 是否允许私聊
+enable_private = true
+# 是否允许群聊
+enable_group = true
+# 是否需要 @ 机器人
+need_at = true
+# 最大保存的会话数量
+max_sessions = 1000
+# 单个会话最大保存的消息数量
+max_messages_per_session = 50
+
+[tools]
+# 工具配置
+# 启用的工具列表
+enabled = ["get_time", "analyze_image", "get_weather_data"] 
