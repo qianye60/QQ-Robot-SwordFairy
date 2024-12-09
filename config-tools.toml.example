@@ -2,6 +2,7 @@
 new_api_key = "sk-odfxCdO4"
 new_base_url = "https://openai.com/v1"
 img_folder = "img"
+model = "gemini-1.5-pro-latest"
 
 [openweather]
 api_key = "sadwqdx"

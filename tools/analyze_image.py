@@ -53,7 +53,7 @@ def analyze_image(query, image_input):
             image_url = f"data:image/jpeg;base64,{image_input}"
 
     completion = client.chat.completions.create(
-        model="gemini-1.5-pro-latest",
+        model=img_config.get("model"),
         messages=[
             {
                 "role": "user",
