@@ -11,4 +11,4 @@ wheels/
 config.toml
 config-tools.toml
 img/
-
+.env

@@ -1,0 +1,27 @@
+services:
+  napcat:
+    image: mlikiowa/napcat-docker:v4.0.3
+    container_name: napcat
+    environment:
+      - ACCOUNT=<qq>
+      - WSR_ENABLE=true
+      - WS_URLS=["ws://llmq:8080/onebot/v11/ws"]
+      - NAPCAT_GID=0
+      - NAPCAT_UID=0
+    restart: always
+    mac_address: 92:5E:A8:1F:C3:B4
+    volumes:
+      - ./napcat/QQ:/app/.config/QQ
+      - ./napcat/config:/app/napcat/config
+    depends_on:
+      - llmq
+
+  llmq:
+    image: bitfennec/llmq-horizon:latest
+    container_name: llmq-horizon
+    restart: always
+    volumes:
+      - ./config.toml:/app/config.toml
+      - ./config-tools.toml:/app/config-tools.toml
+    environment:
+      - TZ=Asia/Shanghai
