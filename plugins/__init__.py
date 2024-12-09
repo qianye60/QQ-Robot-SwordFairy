@@ -154,6 +154,12 @@ async def handle_chat(event: MessageEvent):
         if seg.type == "image" and seg.data.get("url"):
             image_urls.append(seg.data["url"])
     
+    if event.reply:
+        reply_message = event.reply.message
+        for seg in reply_message:
+            if seg.type == "image" and seg.data.get("url"):
+                image_urls.append(seg.data["url"])
+
     full_content = msg_text
     print(image_urls)
     
