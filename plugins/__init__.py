@@ -191,12 +191,12 @@ change_model = on_command("chat model", priority=1, block=True)
 
 @change_model.handle()
 async def handle_change_model(event: MessageEvent, args: Message = CommandArg()):
+    global llm, llm_with_tools
     model_name = args.extract_plain_text().strip()
     if not model_name:
-        await change_model.finish("请指定要切换的模型名称")
+        current_model = llm.model_name
+        await change_model.finish(f"当前模型: {current_model}")
         
-    # 更新模型配置
-    global llm, llm_with_tools
     try:
         llm = ChatOpenAI(
             model=model_name,
