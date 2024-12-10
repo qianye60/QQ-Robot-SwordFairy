@@ -77,7 +77,7 @@ llm = ChatOpenAI(
 )
 
 from .tools import load_tools
-tools = load_tools(plugin_config.tools.enabled)
+tools = load_tools()  # 直接从tools.py加载工具，不需要传参
 llm_with_tools = llm.bind_tools(tools)
 
 from langchain_core.messages import trim_messages
