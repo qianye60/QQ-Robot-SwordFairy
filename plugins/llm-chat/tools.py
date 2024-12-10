@@ -7,10 +7,12 @@ import os
 from pathlib import Path
 import tomli
 
-# 内置工具定义
-BUILTIN_TOOLS: Dict[str, BaseTool] = {
-    "tavily_search": lambda: TavilySearchResults(max_results=2)
-}
+def get_builtin_tools(config: dict) -> Dict[str, BaseTool]:
+    return {
+        "tavily_search": lambda: TavilySearchResults(
+            max_results=config.get("tavily", {}).get("max_results", 2)
+        )
+    }
 
 def load_tools(enabled_tools: Optional[List[str]] = None, tool_paths: Optional[List[str]] = None) -> List[BaseTool]:
     """加载启用的工具
@@ -31,22 +33,20 @@ def load_tools(enabled_tools: Optional[List[str]] = None, tool_paths: Optional[L
         except FileNotFoundError:
             raise FileNotFoundError(f"Tools config file not found at {config_path}")
 
-        # 初始化内置工具配置
+        builtin_tools_dict = get_builtin_tools(config)
+        
         tavily_config = config.get("tavily")
         if tavily_config and "api_key" in tavily_config:
             os.environ["TAVILY_API_KEY"] = tavily_config["api_key"]
 
-        # 加载内置工具
         builtin_tools = config.get("tools", {}).get("builtin", [])
         for name in builtin_tools:
-            tool = BUILTIN_TOOLS.get(name)
+            tool = builtin_tools_dict.get(name)
             if tool:
                 all_tools.append(tool())
             else:
                 print(f"Warning: Built-in tool {name} not found")
 
-
-        # 加载外部工具
         enabled_tools = config.get("tools", {}).get("enabled", [])
 
     search_paths = [str(Path(__file__).resolve().parents[2])]
