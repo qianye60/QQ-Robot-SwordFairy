@@ -14,7 +14,7 @@ class LLMConfig(BaseModel):
     max_context_messages: int = 10
 
 class PluginConfig(BaseModel):
-    command_start: List[str] = []  # 默认空列表
+    command_start: List[str] = []
     enable_private: bool = True
     enable_group: bool = True
     need_at: bool = True

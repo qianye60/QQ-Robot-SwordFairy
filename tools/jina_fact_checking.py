@@ -7,14 +7,14 @@ top_n = config.get('jina', {}).get('top_n', 5)
 min_length = config.get('jina', {}).get('min_length', 10)
 
 @tool
-def jina_search(query):
-    """Query in a search engine
+def jina_fact_checking(query):
+    """Facts to be queried or confirmed, such as "What is the subscription price for OpenAI's latest model, o1-pro?"
     Args:
-        query: Query content
+        query: Query content.
     """
-    url = f'https://s.jina.ai/{query}'
+    url = f'https://g.jina.ai/{query}'
     headers = {
-        'X-Retain-Images': 'none'
+        'Accept': 'application/json'
     }
     
     if jina_api_key:
@@ -35,4 +35,4 @@ def jina_search(query):
     except requests.exceptions.RequestException:
         return "搜索失败"
 
-tools = [jina_search]
+tools = [jina_fact_checking]
