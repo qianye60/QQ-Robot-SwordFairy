@@ -4,9 +4,7 @@ from langchain_core.tools import tool
 
 @tool
 def get_time(timezone: str = "Asia/Shanghai", format: str = "%Y-%m-%d %H:%M:%S") -> str:
-    """
-    获取指定时区当前时间，并根据指定的格式返回时间字符串。
-
+    """获取指定时区当前时间，并根据指定的格式返回时间字符串。
     Args:
         timezone: 时区名称字符串，默认为 "Asia/Shanghai"。例如 "Asia/Shanghai"， "America/New_York"。
         format: 时间格式字符串，默认为 "%Y-%m-%d %H:%M:%S"。

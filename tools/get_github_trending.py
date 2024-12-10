@@ -8,8 +8,6 @@ def get_github_trending():
     如果出错，返回包含错误信息的字符串。
     Args:
         None
-    Returns:
-        str: 包含 GitHub Trending 内容的 Markdown 字符串，或包含错误信息的字符串。
     """
     try:
         headers = {
