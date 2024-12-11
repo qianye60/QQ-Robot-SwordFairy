@@ -1,13 +1,14 @@
 import datetime
 import pytz
 from langchain_core.tools import tool
+from typing import Optional
 
 @tool
-def get_time(timezone: str, format: str):
+def get_time(timezone: str, format: Optional[str]):
     """获取指定时区当前时间，并根据指定的格式返回时间字符串。
     Args:
         timezone: 时区名称字符串。例如 "Asia/Shanghai"， "America/New_York"。
-        format: 时间格式字符串。
+        format: Time format, for example, %Y-%m-%d %H:%M:%S，Optional.
     """
     if timezone is None:
         timezone = "Asia/Shanghai"
