@@ -1,14 +1,9 @@
-from typing import Annotated, Dict
 from nonebot import on_message, on_command
 from nonebot.adapters.onebot.v11 import Message, MessageEvent, GroupMessageEvent
+from nonebot.permission import SUPERUSER
 from nonebot.plugin import PluginMetadata
-from langchain_core.messages import SystemMessage, HumanMessage
-from langchain_openai import ChatOpenAI
-from langchain_google_genai import ChatGoogleGenerativeAI
-from langgraph.graph import StateGraph, START
-from langgraph.graph.message import add_messages
-from langgraph.prebuilt import ToolNode, tools_condition
-from typing_extensions import TypedDict
+from langchain_core.messages import HumanMessage
+from typing import Dict
 from .config import Config
 import os
 from langgraph.checkpoint.memory import MemorySaver
@@ -16,6 +11,7 @@ from datetime import datetime
 from nonebot.params import CommandArg, EventMessage, EventPlainText, EventToMe
 from nonebot.exception import MatcherException
 from random import choice
+from .graph import build_graph, get_llm
 
 __plugin_meta__ = PluginMetadata(
     name="LLM Chat",
@@ -30,17 +26,16 @@ os.environ["OPENAI_API_KEY"] = plugin_config.llm.api_key
 os.environ["OPENAI_BASE_URL"] = plugin_config.llm.base_url
 os.environ["GOOGLE_API_KEY"] = plugin_config.llm.google_api_key
 
-class State(TypedDict):
-    messages: Annotated[list, add_messages]
-
 # 会话模板
 class Session:
     def __init__(self, thread_id: str):
         self.thread_id = thread_id
         self.memory = MemorySaver()
+        # 最后访问时间
         self.last_accessed = datetime.now()
         self.graph = None
 
+# "group_123456_789012": Session对象1
 sessions: Dict[str, Session] = {}
 
 def get_or_create_session(thread_id: str) -> Session:
@@ -71,59 +66,8 @@ def cleanup_old_messages(session: Session):
         # 只保留最新的消息
         session.memory.messages = session.memory.messages[-max_messages:]
 
-graph_builder = StateGraph(State)
-
-def get_llm():
-    """根据配置获取适当的 LLM 实例"""
-    if plugin_config.llm.provider == "google":
-        return ChatGoogleGenerativeAI(
-            model=plugin_config.llm.model,
-            temperature=plugin_config.llm.temperature,
-            max_tokens=plugin_config.llm.max_tokens,
-        )
-    else:  # 默认使用 OpenAI
-        return ChatOpenAI(
-            model=plugin_config.llm.model,
-            temperature=plugin_config.llm.temperature,
-            max_tokens=plugin_config.llm.max_tokens,
-        )
-
-# 替换原有的 llm 初始化
 llm = get_llm()
-
-from .tools import load_tools
-tools = load_tools()  # 直接从tools.py加载工具，不需要传参
-llm_with_tools = llm.bind_tools(tools)
-
-from langchain_core.messages import trim_messages
-trimmer = trim_messages(
-    strategy="last",
-    max_tokens=plugin_config.llm.max_context_messages,
-    token_counter=len,
-    include_system=True,
-    allow_partial=False,
-    start_on="human",
-    end_on=("human", "tool"),
-)
-
-
-def chatbot(state: State):
-    messages = state["messages"]
-    if plugin_config.llm.system_prompt:
-        messages = [SystemMessage(content=plugin_config.llm.system_prompt)] + messages
-    
-    trimmed_messages = trimmer.invoke(messages)
-    print(trimmed_messages)
-    response = llm_with_tools.invoke(trimmed_messages)
-    
-    return {"messages": [response]}
-
-graph_builder.add_node("chatbot", chatbot)
-tool_node = ToolNode(tools=tools)
-graph_builder.add_node("tools", tool_node)
-graph_builder.add_conditional_edges("chatbot", tools_condition)
-graph_builder.add_edge("tools", "chatbot")
-graph_builder.add_edge(START, "chatbot")
+graph_builder = build_graph(plugin_config, llm)
 
 def check_trigger(event: MessageEvent) -> bool:
     """检查是否触发对话
@@ -132,7 +76,6 @@ def check_trigger(event: MessageEvent) -> bool:
     2. 关键词触发
     3. 前缀触发
     """
-
     msg_text = event.get_plaintext()
     
     # 命令触发
@@ -153,7 +96,7 @@ def check_trigger(event: MessageEvent) -> bool:
     
     return False
 
-chat_handler = on_message(rule=check_trigger, priority=5, block=True)
+chat_handler = on_message(rule=check_trigger, priority=10, block=True)
 
 def remove_trigger_words(text: str, message: Message) -> str:
     """移除所有触发词,包括@和昵称"""
@@ -184,6 +127,7 @@ async def handle_chat(
     message: Message = EventMessage(),
     plain_text: str = EventPlainText()
 ):
+    
     # 检查群聊/私聊开关
     if isinstance(event, GroupMessageEvent) and not plugin_config.plugin.enable_group:
         return
@@ -207,11 +151,9 @@ async def handle_chat(
     # 如果全是空白字符,使用配置中的随机回复
     if not full_content.strip():
         if hasattr(plugin_config.plugin, 'empty_message_replies'):
-            print("ok")
             reply = choice(plugin_config.plugin.empty_message_replies)
             await chat_handler.finish(Message(reply))
         else:
-            print("no")
             await chat_handler.finish("您想说什么呢?")
     
     if image_urls:
@@ -239,15 +181,27 @@ async def handle_chat(
     response = result["messages"][-1].content.strip() if result["messages"] else "对不起，我现在无法回答。"
     await chat_handler.finish(Message(response))
 
-# 添加模型切换命令处理器
-change_model = on_command("chat model", priority=1, block=True)
+
+
+
+# 模型切换和清理历史会话
+change_model = on_command(
+    "chat model", 
+    priority=5, 
+    block=True, 
+    permission=SUPERUSER,
+)
 
 @change_model.handle()
 async def handle_change_model(args: Message = CommandArg()):
-    global llm, llm_with_tools
+    global llm, graph_builder, sessions
+    
     model_name = args.extract_plain_text().strip()
     if not model_name:
-        current_model = getattr(llm, "model_name", llm.model)
+        try:
+            current_model = llm.model_name
+        except AttributeError:
+            current_model = llm.model
         await change_model.finish(f"当前模型: {current_model}")
     
     try:
@@ -258,7 +212,8 @@ async def handle_change_model(args: Message = CommandArg()):
         
         plugin_config.llm.model = model_name
         llm = get_llm()
-        llm_with_tools = llm.bind_tools(tools)
+        graph_builder = build_graph(plugin_config, llm)
+        sessions.clear()
         await change_model.finish(f"已切换到模型: {model_name}")
     except MatcherException:
         raise

@@ -1,7 +1,11 @@
 import nonebot
 from nonebot.adapters.onebot.v11 import Adapter
+import toml
+from pathlib import Path
 
-nonebot.init()
+config_path = Path(__file__).parent / "config.toml"
+config = toml.load(config_path)
+nonebot.init(superusers={config['llm']['superusers']})
 
 driver = nonebot.get_driver()
 driver.register_adapter(Adapter)

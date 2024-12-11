@@ -31,7 +31,7 @@ class Config(BaseModel):
     @classmethod
     def load_config(cls) -> "Config":
         """从 config.toml 加载配置"""
-        root_path = Path(__file__).parent.parent.parent
+        root_path = Path(__file__).resolve().parents[2]
         config_path = root_path / "config.toml"
         
         if not config_path.exists():
