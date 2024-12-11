@@ -200,7 +200,7 @@ async def handle_chat(event: MessageEvent):
     )
 
     if result["messages"]:
-        response = result["messages"][-1].content
+        response = result["messages"][-1].content.strip()
     else:
         response = "对不起，我现在无法回答。"
 
