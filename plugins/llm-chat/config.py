@@ -2,7 +2,6 @@ from typing import List, Optional
 from pydantic import BaseModel, Field
 import tomli
 from pathlib import Path
-import os
 
 class LLMConfig(BaseModel):
     model: str
@@ -23,6 +22,7 @@ class PluginConfig(BaseModel):
     max_sessions: int = Field(default=1000, gt=0)
     max_messages_per_session: int = Field(default=50, gt=0)
     keywords: List[str] = []
+    empty_message_replies: List[str] = ["你好", "在呢", "我在听"] 
 
 class Config(BaseModel):
     llm: LLMConfig
@@ -59,6 +59,7 @@ class Config(BaseModel):
                 need_at=toml_config["plugin"]["llm_chat"]["need_at"],
                 max_sessions=toml_config["plugin"]["llm_chat"].get("max_sessions", 1000),
                 max_messages_per_session=toml_config["plugin"]["llm_chat"].get("max_messages_per_session", 50),
+                empty_message_replies=toml_config["plugin"]["llm_chat"].get("empty_message_replies", ["你好", "在呢", "我在听"]),
             )
             
             return cls(

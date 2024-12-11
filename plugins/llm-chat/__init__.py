@@ -13,8 +13,9 @@ from .config import Config
 import os
 from langgraph.checkpoint.memory import MemorySaver
 from datetime import datetime
-from nonebot.params import CommandArg
+from nonebot.params import CommandArg, EventMessage, EventPlainText, EventToMe
 from nonebot.exception import MatcherException
+from random import choice
 
 __plugin_meta__ = PluginMetadata(
     name="LLM Chat",
@@ -154,17 +155,43 @@ def check_trigger(event: MessageEvent) -> bool:
 
 chat_handler = on_message(rule=check_trigger, priority=5, block=True)
 
+def remove_trigger_words(text: str, message: Message) -> str:
+    """移除所有触发词,包括@和昵称"""
+    # 删除所有@片段
+    text = str(message).strip()  # 转换成字符串处理
+    for seg in message:
+        if seg.type == "at":
+            text = text.replace(str(seg), "").strip()
+    
+    # 移除命令前缀
+    if hasattr(plugin_config.plugin, 'command_start'):
+        for cmd in plugin_config.plugin.command_start:
+            if text.startswith(cmd):
+                text = text[len(cmd):].strip()
+                break
+    
+    # 移除关键词
+    if hasattr(plugin_config.plugin, 'keywords'):
+        for keyword in plugin_config.plugin.keywords:
+            text = text.replace(keyword, "").strip()
+    
+    return text
+
 @chat_handler.handle()
-async def handle_chat(event: MessageEvent):
+async def handle_chat(
+    event: MessageEvent,
+    is_tome: bool = EventToMe(),
+    message: Message = EventMessage(),
+    plain_text: str = EventPlainText()
+):
+    # 检查群聊/私聊开关
     if isinstance(event, GroupMessageEvent) and not plugin_config.plugin.enable_group:
         return
     if not isinstance(event, GroupMessageEvent) and not plugin_config.plugin.enable_private:
         return
-        
-    msg_text = event.get_plaintext()
     
     image_urls = []
-    for seg in event.message:
+    for seg in message:
         if seg.type == "image" and seg.data.get("url"):
             image_urls.append(seg.data["url"])
     
@@ -174,21 +201,31 @@ async def handle_chat(event: MessageEvent):
             if seg.type == "image" and seg.data.get("url"):
                 image_urls.append(seg.data["url"])
 
-    full_content = msg_text
-    print(image_urls)
+    # 处理消息内容,移除触发词
+    full_content = remove_trigger_words(plain_text, message)
+    
+    # 如果全是空白字符,使用配置中的随机回复
+    if not full_content.strip():
+        if hasattr(plugin_config.plugin, 'empty_message_replies'):
+            print("ok")
+            reply = choice(plugin_config.plugin.empty_message_replies)
+            await chat_handler.finish(Message(reply))
+        else:
+            print("no")
+            await chat_handler.finish("您想说什么呢?")
     
     if image_urls:
         full_content += "\n图片：" + "\n".join(image_urls)
     
-    if isinstance(event, GroupMessageEvent):
-        thread_id = f"group_{event.group_id}_{event.user_id}"
-    else:
-        thread_id = f"private_{event.user_id}"
+    # 构建会话ID
+    thread_id = (
+        f"group_{event.group_id}_{event.user_id}" 
+        if isinstance(event, GroupMessageEvent)
+        else f"private_{event.user_id}"
+    )
     
     cleanup_old_sessions()
-
     session = get_or_create_session(thread_id)
-
     cleanup_old_messages(session)
 
     if session.graph is None:
@@ -199,18 +236,14 @@ async def handle_chat(event: MessageEvent):
         config={"configurable": {"thread_id": thread_id}},
     )
 
-    if result["messages"]:
-        response = result["messages"][-1].content.strip()
-    else:
-        response = "对不起，我现在无法回答。"
-
+    response = result["messages"][-1].content.strip() if result["messages"] else "对不起，我现在无法回答。"
     await chat_handler.finish(Message(response))
 
 # 添加模型切换命令处理器
 change_model = on_command("chat model", priority=1, block=True)
 
 @change_model.handle()
-async def handle_change_model(event: MessageEvent, args: Message = CommandArg()):
+async def handle_change_model(args: Message = CommandArg()):
     global llm, llm_with_tools
     model_name = args.extract_plain_text().strip()
     if not model_name:
