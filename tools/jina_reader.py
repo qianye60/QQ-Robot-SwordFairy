@@ -13,6 +13,7 @@ def jina_reader(url):
         url: The URL to fetch.
     """
 
+    url = f'https://r.jina.ai/{url}'
     headers = {
         "X-Retain-Images": "none"
     }
@@ -21,7 +22,7 @@ def jina_reader(url):
         headers["Authorization"] = f"Bearer {jina_api_key}"
 
     try:
-        response = requests.get(url, headers=headers, timeout=30)
+        response = requests.get(url, headers=headers, timeout=20)
         response.raise_for_status()
 
         lines = response.text.splitlines()
@@ -36,3 +37,4 @@ def jina_reader(url):
         return "未知错误"
 
 tools = [jina_reader]
+
