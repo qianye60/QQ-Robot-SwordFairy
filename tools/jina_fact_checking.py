@@ -7,7 +7,7 @@ top_n = config.get('jina', {}).get('top_n', 5)
 min_length = config.get('jina', {}).get('min_length', 10)
 
 @tool
-def jina_fact_checking(query):
+def jina_fact_checking(query: str):
     """Facts to be queried or confirmed, such as "What is the subscription price for OpenAI's latest model, o1-pro?"
     Args:
         query: Query content.

@@ -7,7 +7,7 @@ top_n = config.get('jina', {}).get('top_n', 5)
 min_length = config.get('jina', {}).get('min_length', 10)
 
 @tool
-def jina_search(query):
+def jina_search(query: str):
     """Query in a search engine
     Args:
         query: Query content

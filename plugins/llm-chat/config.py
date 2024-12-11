@@ -12,6 +12,8 @@ class LLMConfig(BaseModel):
     max_tokens: int = 1000
     system_prompt: Optional[str] = None
     max_context_messages: int = 10
+    google_api_key: str = ""
+    provider: str = "openai"
 
 class PluginConfig(BaseModel):
     command_start: List[str] = []
@@ -46,6 +48,8 @@ class Config(BaseModel):
                 temperature=toml_config["llm"].get("temperature", 0.7),
                 max_tokens=toml_config["llm"].get("max_tokens", 2000),
                 system_prompt=toml_config["llm"]["system_prompt"],
+                google_api_key=toml_config["llm"].get("google_api_key", ""),
+                provider=toml_config["llm"].get("provider", "openai"),
             )
             
             plugin_config = PluginConfig(

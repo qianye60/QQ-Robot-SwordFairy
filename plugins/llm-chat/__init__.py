@@ -4,6 +4,7 @@ from nonebot.adapters.onebot.v11 import Message, MessageEvent, GroupMessageEvent
 from nonebot.plugin import PluginMetadata
 from langchain_core.messages import SystemMessage, HumanMessage
 from langchain_openai import ChatOpenAI
+from langchain_google_genai import ChatGoogleGenerativeAI
 from langgraph.graph import StateGraph, START
 from langgraph.graph.message import add_messages
 from langgraph.prebuilt import ToolNode, tools_condition
@@ -26,6 +27,7 @@ plugin_config = Config.load_config()
 
 os.environ["OPENAI_API_KEY"] = plugin_config.llm.api_key
 os.environ["OPENAI_BASE_URL"] = plugin_config.llm.base_url
+os.environ["GOOGLE_API_KEY"] = plugin_config.llm.google_api_key
 
 class State(TypedDict):
     messages: Annotated[list, add_messages]
@@ -70,11 +72,23 @@ def cleanup_old_messages(session: Session):
 
 graph_builder = StateGraph(State)
 
-llm = ChatOpenAI(
-    model=plugin_config.llm.model,
-    temperature=plugin_config.llm.temperature,
-    max_tokens=plugin_config.llm.max_tokens,
-)
+def get_llm():
+    """根据配置获取适当的 LLM 实例"""
+    if plugin_config.llm.provider == "google":
+        return ChatGoogleGenerativeAI(
+            model=plugin_config.llm.model,
+            temperature=plugin_config.llm.temperature,
+            max_tokens=plugin_config.llm.max_tokens,
+        )
+    else:  # 默认使用 OpenAI
+        return ChatOpenAI(
+            model=plugin_config.llm.model,
+            temperature=plugin_config.llm.temperature,
+            max_tokens=plugin_config.llm.max_tokens,
+        )
+
+# 替换原有的 llm 初始化
+llm = get_llm()
 
 from .tools import load_tools
 tools = load_tools()  # 直接从tools.py加载工具，不需要传参
@@ -200,15 +214,17 @@ async def handle_change_model(event: MessageEvent, args: Message = CommandArg())
     global llm, llm_with_tools
     model_name = args.extract_plain_text().strip()
     if not model_name:
-        current_model = llm.model_name
+        current_model = getattr(llm, "model_name", llm.model)
         await change_model.finish(f"当前模型: {current_model}")
-        
+    
     try:
-        llm = ChatOpenAI(
-            model=model_name,
-            temperature=plugin_config.llm.temperature,
-            max_tokens=plugin_config.llm.max_tokens,
-        )
+        if "gemini" in model_name.lower():
+            plugin_config.llm.provider = "google"
+        else:
+            plugin_config.llm.provider = "openai"
+        
+        plugin_config.llm.model = model_name
+        llm = get_llm()
         llm_with_tools = llm.bind_tools(tools)
         await change_model.finish(f"已切换到模型: {model_name}")
     except MatcherException:

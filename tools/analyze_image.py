@@ -13,14 +13,11 @@ client = OpenAI(
 )
 
 @tool
-def analyze_image(query, image_input):
+def analyze_image(query: str, image_input: str):
     """Analyze image content and return AI recognition results.
     Args:
-        query (str): A natural language query for image analysis, e.g., "图中有什么" "详细描述图片".
-        image_input (str): The image source, which can be:
-            - Image URL (http:// or https://)
-            - Base64 encoded image string
-            - Base64 image string with 'data:image/' prefix
+        query: A natural language query for image analysis, e.g., "图中有什么" "详细描述图片".
+        image_input: Image source, which can be an image URL (http:// or https://), a Base64 encoded image string, or a Base64 image string with the "image/" prefix.
     """
 
     img_folder = img_config.get("img_folder")

@@ -1,6 +1,7 @@
 import os
 import requests
 from datetime import datetime
+from typing import Optional
 from langchain_core.tools import tool
 from .config import config
 
@@ -8,13 +9,13 @@ weather_config = config.get('openweather', {})
 os.environ["OPENWEATHER_API_KEY"] = weather_config.get('api_key', '')
 
 @tool
-def get_weather_data(location, country_code, query_time=None, query_type='current'):
+def get_weather_data(location: str, country_code: str, query_time: Optional[str] = None, query_type: Optional[str] = 'current'):
     """Retrieve weather data for a specific location and time. You can query for current, hourly, daily, or alert weather data.
     Args:
-        location: The name of the city or location. e.g. 成都、北京、上海. Required.
-        country_code: The ISO 3166 country code for the location. e.g. CN. Required.
+        location: The name of the city or location. e.g. 成都、北京、上海.
+        country_code: The ISO 3166 country code for the location. e.g. CN.
         query_time: The time for which to retrieve weather data, in 'YYYY-MM-DD HH:MM:SS' format. Optional.
-        query_type: The type of weather data to retrieve. Options are 'current', 'today', 'hourly', 'daily', 'alerts'. Optional.
+        query_type: The type of weather data to retrieve. Options are 'current', 'today', 'hourly', 'daily', 'alerts'. "daily" can query the weather for each day of a week. Optional.
     """
     api_key = os.environ.get('OPENWEATHER_API_KEY')
     
