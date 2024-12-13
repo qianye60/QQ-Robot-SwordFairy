@@ -11,20 +11,36 @@ from .config import Config
 
 plugin_config = Config.load_config()
 
-def get_llm():
+def get_llm(model=None):
     """根据配置获取适当的 LLM 实例"""
-    if plugin_config.llm.provider == "google":
-        return ChatGoogleGenerativeAI(
-            model=plugin_config.llm.model,
-            temperature=plugin_config.llm.temperature,
-            max_tokens=plugin_config.llm.max_tokens,
-        )
-    else:  # 默认使用 OpenAI
-        return ChatOpenAI(
-            model=plugin_config.llm.model,
-            temperature=plugin_config.llm.temperature,
-            max_tokens=plugin_config.llm.max_tokens,
-        )
+    if model is None:
+        model = plugin_config.llm.model
+    else:        
+        model = model.lower()
+            
+    print(f"graph使用模型: {model}")
+    
+    try:
+        if "gemini" in model:
+            print("使用 Google Generative AI")
+            return ChatGoogleGenerativeAI(
+                model=model,
+                temperature=plugin_config.llm.temperature,
+                max_tokens=plugin_config.llm.max_tokens,
+                google_api_key=plugin_config.llm.google_api_key,
+            )
+        else:
+            print("使用 OpenAI")
+            return ChatOpenAI(
+                model=model,
+                temperature=plugin_config.llm.temperature,
+                max_tokens=plugin_config.llm.max_tokens,
+                api_key=plugin_config.llm.api_key,
+                base_url=plugin_config.llm.base_url,
+            )
+    except Exception as e:
+        print(f"模型初始化失败: {str(e)}")
+        raise
 
 class State(TypedDict):
     messages: Annotated[list, add_messages]
@@ -50,10 +66,7 @@ def build_graph(config: Config, llm):
             messages = [SystemMessage(content=config.llm.system_prompt)] + messages
         
         trimmed_messages = trimmer.invoke(messages)
-        print(trimmed_messages)
         response = llm_with_tools.invoke(trimmed_messages)
-        print("----------------------------------------------------------")
-        print(response)
         return {"messages": [response]}
 
     graph_builder = StateGraph(State)
