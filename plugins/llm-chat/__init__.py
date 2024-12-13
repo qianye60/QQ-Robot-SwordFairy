@@ -1,20 +1,27 @@
-from nonebot import on_message, on_command
-from nonebot.adapters.onebot.v11 import Message, MessageEvent, GroupMessageEvent, Bot, Event
+from nonebot.adapters.onebot.v11 import (
+    Message,
+    MessageEvent,
+    GroupMessageEvent,
+    Event,
+)
 from nonebot.permission import SUPERUSER
-from nonebot.typing import T_State
-from nonebot.rule import to_me
+from nonebot import on_message, on_command
+from nonebot.params import CommandArg, EventMessage, EventPlainText
+from nonebot.exception import MatcherException
 from nonebot.plugin import PluginMetadata
+
 from langchain_core.messages import SystemMessage, HumanMessage, AIMessage, ToolMessage
+from langgraph.checkpoint.memory import MemorySaver
+
 from typing import List, Dict, Union
+from datetime import datetime
+from random import choice
 from .config import Config
+from .graph import build_graph, get_llm
 import os
 import json
-from langgraph.checkpoint.memory import MemorySaver
-from datetime import datetime
-from nonebot.params import CommandArg, EventMessage, EventPlainText, EventToMe
-from nonebot.exception import MatcherException
-from random import choice
-from .graph import build_graph, get_llm
+
+
 
 __plugin_meta__ = PluginMetadata(
     name="LLM Chat",
@@ -29,21 +36,19 @@ os.environ["OPENAI_API_KEY"] = plugin_config.llm.api_key
 os.environ["OPENAI_BASE_URL"] = plugin_config.llm.base_url
 os.environ["GOOGLE_API_KEY"] = plugin_config.llm.google_api_key
 
-
-def format_messages_for_print(messages: List[Union[SystemMessage, HumanMessage, AIMessage, ToolMessage]]) -> str:
-    """
-    格式化 LangChain 消息列表，提取并格式化 SystemMessage, HumanMessage, AIMessage (包括工具调用), 和 ToolMessage 的内容.
-    """
+def format_messages_for_print(
+    messages: List[Union[SystemMessage, HumanMessage, AIMessage, ToolMessage]]
+) -> str:
+    """格式化 LangChain 消息列表，提取并格式化 SystemMessage, HumanMessage, AIMessage (包括工具调用), 和 ToolMessage 的内容."""
     output = []
-   
     for message in messages:
         if isinstance(message, SystemMessage):
             output.append(f"SystemMessage: {message.content}\n")
         elif isinstance(message, HumanMessage):
             output.append(f"HumanMessage: {message.content}\n")
         elif isinstance(message, AIMessage):
+            output.append(f"AIMessage: {message.content}\n")
             if message.tool_calls:
-                output.append(f"AIMessage: {message.content}\n")
                 for tool_call in message.tool_calls:
                     output.append(f"  Tool Name: {tool_call['name']}\n")
                     try:
@@ -51,10 +56,10 @@ def format_messages_for_print(messages: List[Union[SystemMessage, HumanMessage, 
                     except (json.JSONDecodeError, TypeError):
                         args = tool_call['args']
                     output.append(f"  Tool Arguments: {args}\n")
-            else:
-                output.append(f"AIMessage: {message.content}\n")
         elif isinstance(message, ToolMessage):
-                  output.append(f"ToolMessage: Tool Name: {message.name}  Tool content: {message.content}\n")
+            output.append(
+                f"ToolMessage: Tool Name: {message.name}  Tool content: {message.content}\n"
+            )
     return "".join(output)
 
 # 会话模板
@@ -96,27 +101,23 @@ graph_builder = build_graph(plugin_config, llm)
 
 
 def chat_rule(event: Event) -> bool:
-    Trigger_mode = plugin_config.plugin.Trigger_mode
-    Trigger_words = plugin_config.plugin.Trigger_words
-
+    """定义触发规则"""
+    trigger_mode = plugin_config.plugin.Trigger_mode
+    trigger_words = plugin_config.plugin.Trigger_words
     msg = str(event.get_message())
-    
-    if "at" in Trigger_mode and event.is_tome():
+
+    if "at" in trigger_mode and event.is_tome():
         return True
-    
-    if "keyword" in Trigger_mode:
-        for word in Trigger_words:
+    if "keyword" in trigger_mode:
+        for word in trigger_words:
             if word in msg:
                 return True
-
-    if "prefix" in Trigger_mode:
-        for word in Trigger_words:
+    if "prefix" in trigger_mode:
+        for word in trigger_words:
             if msg.startswith(word):
                 return True
-
-    if not Trigger_mode:
+    if not trigger_mode:
         return event.is_tome()
-    
     return False
 
 chat_handler = on_message(rule=chat_rule, priority=10, block=True)
@@ -154,23 +155,25 @@ async def handle_chat(
     if not isinstance(event, GroupMessageEvent) and not plugin_config.plugin.enable_private:
         await chat_handler.finish("不可以在私聊中使用")
 
-    image_urls = []
-    for seg in message:
-        if seg.type == "image" and seg.data.get("url"):
-            image_urls.append(seg.data["url"])
-
+    image_urls = [
+        seg.data["url"]
+        for seg in message
+        if seg.type == "image" and seg.data.get("url")
+    ]
     if event.reply:
-        reply_message = event.reply.message
-        for seg in reply_message:
-            if seg.type == "image" and seg.data.get("url"):
-                image_urls.append(seg.data["url"])
+        image_urls.extend(
+            seg.data["url"]
+            for seg in event.reply.message
+            if seg.type == "image" and seg.data.get("url")
+        )
+
 
     # 处理消息内容,移除触发词
     full_content = remove_trigger_words(plain_text, message)
     
     # 如果全是空白字符,使用配置中的随机回复
     if not full_content.strip():
-        if hasattr(plugin_config.plugin, 'empty_message_replies'):
+        if hasattr(plugin_config.plugin, "empty_message_replies"):
             reply = choice(plugin_config.plugin.empty_message_replies)
             await chat_handler.finish(Message(reply))
         else:
@@ -189,7 +192,6 @@ async def handle_chat(
         thread_id = f"private_{event.user_id}"
 
     print(f"Current thread: {thread_id}")
-    
     cleanup_old_sessions()
     session = get_or_create_session(thread_id)
 
@@ -199,33 +201,34 @@ async def handle_chat(
 
     try:
         result = session.graph.invoke(
-           {"messages": [HumanMessage(content=full_content)]},
-           config={"configurable": {"thread_id": thread_id}},
-          )
-        # print("LangGraph 返回的原始数据：")
-        # print(result)
-        # 打印格式化数据
+            {"messages": [HumanMessage(content=full_content)]},
+            config={"configurable": {"thread_id": thread_id}},
+        )
         formatted_output = format_messages_for_print(result["messages"])
         print(formatted_output)
-        # 如返回空消息
+
         if not result["messages"]:
-              response = "对不起，我现在无法回答。"
+            response = "对不起，我现在无法回答。"
         else:
-           last_message = result["messages"][-1]
-           if isinstance(last_message, AIMessage):
-              if last_message.invalid_tool_calls:
-                  response = f"工具调用失败: {last_message.invalid_tool_calls[0]['error']}" # 使用错误消息
-              elif last_message.content:
-                   response = last_message.content.strip()
-              else:
-                  response = "对不起，我没有理解您的问题。"
-           elif isinstance(last_message, ToolMessage) and last_message.content:
-              if isinstance(last_message.content,str):
-                   response = last_message.content
-              else:
-                  response = str(last_message.content)
-           else:
-              response = "对不起，我没有理解您的问题。"
+            last_message = result["messages"][-1]
+            if isinstance(last_message, AIMessage):
+                if last_message.invalid_tool_calls:
+                    if isinstance(last_message.invalid_tool_calls, list) and last_message.invalid_tool_calls:
+                        response = f"工具调用失败: {last_message.invalid_tool_calls[0]['error']}"
+                    else:
+                        response = "工具调用失败，但没有错误信息"
+                elif last_message.content:
+                    response = last_message.content.strip()
+                else:
+                    response = "对不起，我没有理解您的问题。"
+            elif isinstance(last_message, ToolMessage) and last_message.content:
+                response = (
+                    last_message.content
+                    if isinstance(last_message.content, str)
+                    else str(last_message.content)
+                )
+            else:
+                response = "对不起，我没有理解您的问题。"
     except Exception as e:
         print(f"调用 LangGraph 时发生错误: {e}")
         response = f"抱歉，在处理您的请求时出现问题。错误信息：{e}"
@@ -250,7 +253,7 @@ async def handle_group_chat_isolation(args: Message = CommandArg(), event: Event
     isolation_str = args.extract_plain_text().strip().lower()
     if not isolation_str:
         current_group = plugin_config.plugin.group_chat_isolation
-        await change_model.finish(f"当前群聊会话隔离: {current_group}")
+        await group_chat_isolation.finish(f"当前群聊会话隔离: {current_group}")
     
     if isolation_str == "true":
         plugin_config.plugin.group_chat_isolation = True
@@ -268,7 +271,7 @@ async def handle_group_chat_isolation(args: Message = CommandArg(), event: Event
         else:
             keys_to_remove = [key for key in sessions if key == prefix]
     else:
-       keys_to_remove = [key for key in sessions if key.startswith("private_")]
+        keys_to_remove = [key for key in sessions if key.startswith("private_")]
 
     for key in keys_to_remove:
         del sessions[key]
@@ -277,7 +280,6 @@ async def handle_group_chat_isolation(args: Message = CommandArg(), event: Event
     await group_chat_isolation.finish(
         f"已{'禁用' if not plugin_config.plugin.group_chat_isolation else '启用'}群聊会话隔离，已清理对应会话"
     )
-
 
 
 
@@ -293,8 +295,9 @@ change_model = on_command(
 
 @change_model.handle()
 async def handle_change_model(args: Message = CommandArg()):
+    """处理模型切换"""
     global llm, graph_builder, sessions, plugin_config
-    
+
     model_name = args.extract_plain_text().strip()
     if not model_name:
         try:
@@ -302,7 +305,7 @@ async def handle_change_model(args: Message = CommandArg()):
         except AttributeError:
             current_model = llm.model
         await change_model.finish(f"当前模型: {current_model}")
-    
+
     try:
         llm = get_llm(model_name)
         graph_builder = build_graph(plugin_config, llm)

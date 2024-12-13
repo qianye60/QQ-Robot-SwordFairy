@@ -15,7 +15,7 @@ def get_llm(model=None):
     """根据配置获取适当的 LLM 实例"""
     if model is None:
         model = plugin_config.llm.model
-    else:        
+    else:
         model = model.lower()
             
     print(f"graph使用模型: {model}")
@@ -64,9 +64,9 @@ def build_graph(config: Config, llm):
         messages = state["messages"]
         if config.llm.system_prompt:
             messages = [SystemMessage(content=config.llm.system_prompt)] + messages
-        
         trimmed_messages = trimmer.invoke(messages)
         response = llm_with_tools.invoke(trimmed_messages)
+        print(f"chatbot: {response}")
         return {"messages": [response]}
 
     graph_builder = StateGraph(State)
@@ -76,5 +76,5 @@ def build_graph(config: Config, llm):
     graph_builder.add_conditional_edges("chatbot", tools_condition)
     graph_builder.add_edge("tools", "chatbot")
     graph_builder.add_edge(START, "chatbot")
-    
+
     return graph_builder

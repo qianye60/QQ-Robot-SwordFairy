@@ -1,7 +1,7 @@
 from typing import List, Optional
 from pydantic import BaseModel, Field
-import tomli
 from pathlib import Path
+import tomli
 
 class LLMConfig(BaseModel):
     model: str
@@ -19,10 +19,9 @@ class PluginConfig(BaseModel):
     group_chat_isolation: bool = True
     enable_private: bool = True
     enable_group: bool = True
-    need_at: bool = True
     max_sessions: int = Field(default=1000, gt=0)
     max_messages_per_session: int = Field(default=50, gt=0)
-    empty_message_replies: List[str] = ["你好", "在呢", "我在听"] 
+    empty_message_replies: List[str] = ["你好", "在呢", "我在听"]
 
 class Config(BaseModel):
     llm: LLMConfig
@@ -40,7 +39,7 @@ class Config(BaseModel):
         try:
             with open(config_path, "rb") as f:
                 toml_config = tomli.load(f)
-                
+
             llm_config = LLMConfig(
                 model=toml_config["llm"]["model"],
                 api_key=toml_config["llm"]["api_key"],
@@ -57,18 +56,13 @@ class Config(BaseModel):
                 group_chat_isolation=toml_config["plugin"]["llm_chat"]["group_chat_isolation"],
                 enable_private=toml_config["plugin"]["llm_chat"]["enable_private"],
                 enable_group=toml_config["plugin"]["llm_chat"]["enable_group"],
-                need_at=toml_config["plugin"]["llm_chat"]["need_at"],
                 max_sessions=toml_config["plugin"]["llm_chat"].get("max_sessions", 1000),
                 max_messages_per_session=toml_config["plugin"]["llm_chat"].get("max_messages_per_session", 50),
                 empty_message_replies=toml_config["plugin"]["llm_chat"].get("empty_message_replies", ["你好", "在呢", "我在听"]),
             )
             
-            return cls(
-                llm=llm_config,
-                plugin=plugin_config
-            )
+            return cls(llm=llm_config, plugin=plugin_config)
         except Exception as e:
             raise RuntimeError(f"Failed to load config.toml: {str(e)}")
-
 
 
