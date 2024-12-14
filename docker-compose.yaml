@@ -5,7 +5,7 @@ services:
     environment:
       - ACCOUNT=<qq>
       - WSR_ENABLE=true
-      - WS_URLS=["ws://llmq:8080/onebot/v11/ws"]
+      - WS_URLS=["ws://llmq:40000/onebot/v11/ws"]
       - NAPCAT_GID=0
       - NAPCAT_UID=0
     restart: always

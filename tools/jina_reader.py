@@ -8,7 +8,7 @@ min_length = config.get('jina', {}).get('min_length', 10)
 
 @tool
 def jina_reader(url: str):
-    """Fetch webpage content by URL, filter short lines and truncate.
+    """Fetch URL content
     Args:
         url: The URL to fetch.
     """

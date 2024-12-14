@@ -286,32 +286,49 @@ async def handle_group_chat_isolation(args: Message = CommandArg(), event: Event
 
 
 # 模型切换和清理历史会话
-change_model = on_command(
-    "chat model", 
-    priority=5, 
-    block=True, 
+chat_command = on_command(
+    "chat",
+    priority=5,
+    block=True,
     permission=SUPERUSER,
 )
 
-@change_model.handle()
-async def handle_change_model(args: Message = CommandArg()):
-    """处理模型切换"""
+@chat_command.handle()
+async def handle_chat_command(args: Message = CommandArg()):
+    """处理 chat model 和 chat clear 命令"""
     global llm, graph_builder, sessions, plugin_config
 
-    model_name = args.extract_plain_text().strip()
-    if not model_name:
+    command_args = args.extract_plain_text().strip().split(maxsplit=1)
+    if not command_args:
+        await chat_command.finish(
+            """请输入有效的命令：
+            'chat model <模型名字>' 切换模型 
+            'chat clear' 清理会话"""
+            )
+    command = command_args[0].lower()
+    if command == "model":
+        # 处理模型切换
+        if len(command_args) < 2:
+            try:
+                current_model = llm.model_name
+            except AttributeError:
+                current_model = llm.model
+            await chat_command.finish(f"当前模型: {current_model}")
+        model_name = command_args[1]
         try:
-            current_model = llm.model_name
-        except AttributeError:
-            current_model = llm.model
-        await change_model.finish(f"当前模型: {current_model}")
-
-    try:
-        llm = get_llm(model_name)
-        graph_builder = build_graph(plugin_config, llm)
+            llm = get_llm(model_name)
+            graph_builder = build_graph(plugin_config, llm)
+            sessions.clear()
+            await chat_command.finish(f"已切换到模型: {model_name}")
+        except MatcherException:
+            raise
+        except Exception as e:
+            await chat_command.finish(f"切换模型失败: {str(e)}")
+            
+    elif command == "clear":
+        # 处理清理历史会话
         sessions.clear()
-        await change_model.finish(f"已切换到模型: {model_name}")
-    except MatcherException:
-        raise
-    except Exception as e:
-        await change_model.finish(f"切换模型失败: {str(e)}")
+        await chat_command.finish("已清理所有历史会话。")
+    
+    else:
+        await chat_command.finish("无效的命令，请使用 'chat model <模型名字>' 或 'chat clear'.")
