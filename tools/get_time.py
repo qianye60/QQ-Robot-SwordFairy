@@ -4,17 +4,12 @@ from langchain_core.tools import tool
 from typing import Optional
 
 @tool
-def get_time(timezone: str, format: Optional[str]):
+def get_time(timezone: str, format: str = "%Y-%m-%d %H:%M:%S"):
     """获取指定时区当前时间，并根据指定的格式返回时间字符串。
     Args:
         timezone: 时区名称字符串。例如 "Asia/Shanghai"， "America/New_York"。
         format: Time format, for example, %Y-%m-%d %H:%M:%S，Optional.
     """
-    if timezone is None:
-        timezone = "Asia/Shanghai"
-    if format is None:
-        format = "%Y-%m-%d %H:%M:%S"
-
     try:
         tz = pytz.timezone(timezone)
         now = datetime.datetime.now(tz)

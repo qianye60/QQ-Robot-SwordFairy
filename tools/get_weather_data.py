@@ -9,7 +9,7 @@ weather_config = config.get('openweather', {})
 os.environ["OPENWEATHER_API_KEY"] = weather_config.get('api_key', '')
 
 @tool
-def get_weather_data(location: str, country_code: str, query_time: Optional[str] = None, query_type: Optional[str] = 'current'):
+def get_weather_data(location: str, country_code: str, query_time: str = None, query_type: str = 'current'):
     """Retrieve weather data for a specific location and time. You can query for current, hourly, daily, or alert weather data.
     Args:
         location: The name of the city or location. e.g. 成都、北京、上海.
