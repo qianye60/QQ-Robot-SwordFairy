@@ -154,6 +154,23 @@ async def handle_chat(
         await chat_handler.finish("不可以在群聊中使用")
     if not isinstance(event, GroupMessageEvent) and not plugin_config.plugin.enable_private:
         await chat_handler.finish("不可以在私聊中使用")
+        
+    # 获取用户名 (根据配置决定是否启用)
+    user_name = ""  # 初始化为空字符串
+    if plugin_config.plugin.enable_username:
+        user_name = event.sender.nickname if event.sender.nickname else event.sender.card
+        if not user_name:
+            try:
+                if isinstance(event, GroupMessageEvent):
+                    user_info = await event.bot.get_group_member_info(group_id=event.group_id, user_id=event.user_id)
+                    user_name = user_info.get("nickname") or user_info.get("card") or str(event.user_id)
+                else:
+                    user_info = await event.bot.get_stranger_info(user_id=event.user_id)
+                    user_name = user_info.get("nickname") or str(event.user_id)
+            except Exception as e:
+                print(f"获取用户信息失败: {e}")
+                user_name = str(event.user_id)
+    print(user_name)
 
     image_urls = [
         seg.data["url"]
@@ -200,8 +217,14 @@ async def handle_chat(
         session.graph = graph_builder.compile(checkpointer=session.memory)
 
     try:
+        # 在发送给 LangGraph 的消息内容中添加用户名
+        if plugin_config.plugin.enable_username and user_name:
+            message_content = f"{user_name}: {full_content}"
+        else:
+            message_content = full_content
+
         result = session.graph.invoke(
-            {"messages": [HumanMessage(content=full_content)]},
+            {"messages": [HumanMessage(content=message_content)]},
             config={"configurable": {"thread_id": thread_id}},
         )
         formatted_output = format_messages_for_print(result["messages"])

@@ -20,6 +20,7 @@ class PluginConfig(BaseModel):
     enable_private: bool = True
     enable_group: bool = True
     max_sessions: int = Field(default=1000, gt=0)
+    enable_username: bool = False
     empty_message_replies: List[str] = ["你好", "在呢", "我在听"]
 
 class Config(BaseModel):
@@ -56,6 +57,7 @@ class Config(BaseModel):
                 enable_private=toml_config["plugin"]["llm_chat"]["enable_private"],
                 enable_group=toml_config["plugin"]["llm_chat"]["enable_group"],
                 max_sessions=toml_config["plugin"]["llm_chat"].get("max_sessions", 1000),
+                enable_username=toml_config["plugin"]["llm_chat"].get("enable_username", False),
                 empty_message_replies=toml_config["plugin"]["llm_chat"].get("empty_message_replies", ["你好", "在呢", "我在听"]),
             )
             
