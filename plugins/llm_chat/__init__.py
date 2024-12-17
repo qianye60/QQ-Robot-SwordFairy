@@ -3,6 +3,7 @@ from nonebot.adapters.onebot.v11 import (
     MessageEvent,
     GroupMessageEvent,
     Event,
+    MessageSegment,
 )
 from nonebot.permission import SUPERUSER
 from nonebot import on_message, on_command
@@ -19,6 +20,7 @@ from random import choice
 from .config import Config
 from .graph import build_graph, get_llm
 import os
+import re
 import json
 
 
@@ -255,7 +257,18 @@ async def handle_chat(
     except Exception as e:
         print(f"调用 LangGraph 时发生错误: {e}")
         response = f"抱歉，在处理您的请求时出现问题。错误信息：{e}"
-    await chat_handler.finish(Message(response))
+        
+    # 检查是否有图片链接，并发送图片或文本消息
+    image_url_pattern = re.compile(r'https?://[^\s]+?\.(?:png|jpg|jpeg|gif|bmp|webp)', re.IGNORECASE)
+    match = image_url_pattern.search(response)
+    
+    if match:
+        image_url = match.group(0)
+        # 构建文本消息，包含图片
+        message_content = response.replace(image_url, "") # 移除链接，防止重复显示
+        await chat_handler.finish(Message(message_content) + MessageSegment.image(image_url))
+    else:
+        await chat_handler.finish(Message(response))
 
 
 

@@ -16,4 +16,5 @@ dependencies = [
     "tomli>=2.2.1",
     "pyquery>=2.0.1",
     "langchain-google-genai>=2.0.6",
+    "fal-client>=0.5.6",
 ]

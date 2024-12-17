@@ -189,6 +189,19 @@ wheels = [
 ]
 
 [[package]]
+name = "fal-client"
+version = "0.5.6"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "httpx" },
+    { name = "httpx-sse" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/d1/5c/407fd990d2afedf1e8bbae3da36659503b47a1040a5633afad4115adf75b/fal_client-0.5.6.tar.gz", hash = "sha256:d3afc4b6250023d0ee8437ec504558231d3b106d7aabc12cda8c39883faddecb", size = 11524 }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/73/41/a607afd186861247ac71beb55079521861faad7b604f8ee854b29ecf34f8/fal_client-0.5.6-py3-none-any.whl", hash = "sha256:631fd857a3c44753ee46a2eea1e7276471453aca58faac9c3702f744c7c84050", size = 8163 },
+]
+
+[[package]]
 name = "fastapi"
 version = "0.115.6"
 source = { registry = "https://pypi.org/simple" }
@@ -666,6 +679,7 @@ name = "llmq-horizon"
 version = "0.1.1"
 source = { virtual = "." }
 dependencies = [
+    { name = "fal-client" },
     { name = "langchain" },
     { name = "langchain-community" },
     { name = "langchain-google-genai" },
@@ -681,6 +695,7 @@ dependencies = [
 
 [package.metadata]
 requires-dist = [
+    { name = "fal-client", specifier = ">=0.5.6" },
     { name = "langchain", specifier = ">=0.3.10" },
     { name = "langchain-community", specifier = ">=0.3.10" },
     { name = "langchain-google-genai", specifier = ">=2.0.6" },
