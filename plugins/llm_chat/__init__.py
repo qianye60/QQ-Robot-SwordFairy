@@ -211,8 +211,8 @@ async def handle_chat(
             {"messages": [HumanMessage(content=message_content)]},
             {"configurable": {"thread_id": thread_id}},
         )
-        # formatted_output = format_messages_for_print(result["messages"])
-        # print(formatted_output)
+        formatted_output = format_messages_for_print(result["messages"])
+        print(formatted_output)
 
         if not result["messages"]:
             response = "对不起，我现在无法回答。"

@@ -647,15 +647,15 @@ wheels = [
 
 [[package]]
 name = "langgraph-sdk"
-version = "0.1.45"
+version = "0.1.47"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "httpx" },
     { name = "orjson" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/0b/dd/2ab238622c418c6adf6332ec996c18abde86c4a522a78e67432319fd39d4/langgraph_sdk-0.1.45.tar.gz", hash = "sha256:d48f7af3e0d1690771dddb861aca92e8f4955724836693026433a4d9097fe456", size = 38383 }
+sdist = { url = "https://files.pythonhosted.org/packages/b4/ba/7a52d10aca01efe1c7a154f8c5109a7846ae53b56b7f2bb4f0ccf8553eff/langgraph_sdk-0.1.47.tar.gz", hash = "sha256:a2498e03b280deee727a8668f4b24338f6f8d83359943da4febffd57d345cf9a", size = 40264 }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/9a/e0/6e0c5c19c5ce4f2d95f14103ba28a87667da20c09bbf961692eaecdb98ef/langgraph_sdk-0.1.45-py3-none-any.whl", hash = "sha256:bbb1d4777025336acaf3a5a871b27a5da5600a072b80c1a2707484c6e661bbae", size = 40935 },
+    { url = "https://files.pythonhosted.org/packages/ad/1b/f8e3cc3c2637cb8a90e5fb2e43a0301a887b76d04a16f7d6569b26ca9317/langgraph_sdk-0.1.47-py3-none-any.whl", hash = "sha256:9020b5ced1e7ea40b88d9bac04b67069bd4b1e6443a455601d0a56c22b72a51c", size = 43284 },
 ]
 
 [[package]]
@@ -689,6 +689,7 @@ dependencies = [
     { name = "nonebot2", extra = ["fastapi"] },
     { name = "pyquery" },
     { name = "pytz" },
+    { name = "sxtwl" },
     { name = "toml" },
     { name = "tomli" },
 ]
@@ -705,6 +706,7 @@ requires-dist = [
     { name = "nonebot2", extras = ["fastapi"], specifier = ">=2.4.0" },
     { name = "pyquery", specifier = ">=2.0.1" },
     { name = "pytz", specifier = ">=2024.2" },
+    { name = "sxtwl", specifier = ">=2.0.7" },
     { name = "toml", specifier = ">=0.10.2" },
     { name = "tomli", specifier = ">=2.2.1" },
 ]
@@ -881,7 +883,7 @@ wheels = [
 
 [[package]]
 name = "openai"
-version = "1.57.4"
+version = "1.58.1"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "anyio" },
@@ -893,9 +895,9 @@ dependencies = [
     { name = "tqdm" },
     { name = "typing-extensions" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/29/e4/267d7f3f93432454f6dde95f08c737f48f031090693e558e2da7e63909ec/openai-1.57.4.tar.gz", hash = "sha256:a8f071a3e9198e2818f63aade68e759417b9f62c0971bdb83de82504b70b77f7", size = 316459 }
+sdist = { url = "https://files.pythonhosted.org/packages/27/3c/b1ecce430ed56fa3ac1b0676966d3250aab9c70a408232b71e419ea62148/openai-1.58.1.tar.gz", hash = "sha256:f5a035fd01e141fc743f4b0e02c41ca49be8fab0866d3b67f5f29b4f4d3c0973", size = 343411 }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/3e/be/b466c8b64b224d285a338fbc705dc9d58cd60068bbfb8be2e47b1691e55c/openai-1.57.4-py3-none-any.whl", hash = "sha256:7def1ab2d52f196357ce31b9cfcf4181529ce00838286426bb35be81c035dafb", size = 390267 },
+    { url = "https://files.pythonhosted.org/packages/8e/5a/d22cd07f1a99b9e8b3c92ee0c1959188db4318828a3d88c9daac120bdd69/openai-1.58.1-py3-none-any.whl", hash = "sha256:e2910b1170a6b7f88ef491ac3a42c387f08bd3db533411f7ee391d166571d63c", size = 454279 },
 ]
 
 [[package]]
@@ -1215,6 +1217,18 @@ dependencies = [
 sdist = { url = "https://files.pythonhosted.org/packages/1a/4c/9b5764bd22eec91c4039ef4c55334e9187085da2d8a2df7bd570869aae18/starlette-0.41.3.tar.gz", hash = "sha256:0e4ab3d16522a255be6b28260b938eae2482f98ce5cc934cb08dce8dc3ba5835", size = 2574159 }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/96/00/2b325970b3060c7cecebab6d295afe763365822b1306a12eeab198f74323/starlette-0.41.3-py3-none-any.whl", hash = "sha256:44cedb2b7c77a9de33a8b74b2b90e9f50d11fcf25d8270ea525ad71a25374ff7", size = 73225 },
+]
+
+[[package]]
+name = "sxtwl"
+version = "2.0.7"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/f6/e3/ee4e81d6759ccbc5718308108f94edc7fd962024bd9bb042169c542febf4/sxtwl-2.0.7.tar.gz", hash = "sha256:38b24472389f7f6f3521c2c99e4b5e86c0184c7d6eb02e5409c239d21f0a6512", size = 163780 }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/25/e9/9dcd837900b4aa2abcb2c55b507925639ee9ef5f02e6fa8ef20d67c56586/sxtwl-2.0.7-cp313-cp313-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:8d1143cca29c7e635fcd9877b54f9f07057c99275ebf547586e4e1c572513cef", size = 1170059 },
+    { url = "https://files.pythonhosted.org/packages/65/34/367d19786a14aa1e0a78b9091ff17376b3dfa6eb1c738ac460d65f41955c/sxtwl-2.0.7-cp313-cp313-manylinux_2_5_i686.manylinux1_i686.manylinux_2_17_i686.manylinux2014_i686.whl", hash = "sha256:2e9e1596b7c943d31d411d987d2231d461e83eb24b0d317de3cd8d43faea8609", size = 1118834 },
+    { url = "https://files.pythonhosted.org/packages/bc/02/7d8736b89768c4f2361e96a13fd3e2c6e28590558f70b39de0b43ea67c4b/sxtwl-2.0.7-cp313-cp313t-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:75e022c1601b321a93592d0b2464c1139dafe2bc86c42136eb3837905afd231f", size = 1176969 },
+    { url = "https://files.pythonhosted.org/packages/fc/4a/bbc4e45255001353cf52967698e37cefa81b03ad46d728f5b42e9e575f63/sxtwl-2.0.7-cp313-cp313t-manylinux_2_5_i686.manylinux1_i686.manylinux_2_17_i686.manylinux2014_i686.whl", hash = "sha256:ef8db940b98583e3916486c0d5433f987500f1331bfb027753416a9de33f9487", size = 1129606 },
 ]
 
 [[package]]
