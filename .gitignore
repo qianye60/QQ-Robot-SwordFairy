@@ -12,3 +12,4 @@ config.toml
 config-tools.toml
 img/
 .env
+languages_cache.json
