@@ -1,13 +1,14 @@
-from typing import Annotated
+from typing import Annotated, List, Union
 from typing_extensions import TypedDict
 from langgraph.graph import StateGraph, START
 from langgraph.graph.message import add_messages
 from langgraph.prebuilt import ToolNode, tools_condition
-from langchain_core.messages import SystemMessage, trim_messages
+from langchain_core.messages import SystemMessage, trim_messages, HumanMessage, AIMessage, ToolMessage
 from langchain_openai import ChatOpenAI
 from langchain_google_genai import ChatGoogleGenerativeAI
 from .tools import load_tools
 from .config import Config
+import json
 
 plugin_config = Config.load_config()
 
@@ -65,8 +66,10 @@ def build_graph(config: Config, llm):
         if config.llm.system_prompt:
             messages = [SystemMessage(content=config.llm.system_prompt)] + messages
         trimmed_messages = trimmer.invoke(messages)
+        print("-" * 50)
+        print(format_messages_for_print(trimmed_messages))
         response = llm_with_tools.invoke(trimmed_messages)
-        print(f"chatbot: {response}")
+        # print(f"chatbot: {response}")
         return {"messages": [response]}
 
     graph_builder = StateGraph(State)
@@ -78,3 +81,31 @@ def build_graph(config: Config, llm):
     graph_builder.add_edge(START, "chatbot")
 
     return graph_builder
+
+
+def format_messages_for_print(
+    messages: List[Union[SystemMessage, HumanMessage, AIMessage, ToolMessage]]
+) -> str:
+    """格式化 LangChain 消息列表，提取并格式化 SystemMessage, HumanMessage, AIMessage (包括工具调用), 和 ToolMessage 的内容."""
+    output = []
+    for message in messages:
+        if isinstance(message, SystemMessage):
+            output.append(f"SystemMessage: {message.content}\n")
+            output.append("_" * 50 + "\n")
+        elif isinstance(message, HumanMessage):
+            output.append(f"HumanMessage: {message.content}\n")
+        elif isinstance(message, AIMessage):
+            output.append(f"AIMessage: {message.content}\n")
+            if message.tool_calls:
+                for tool_call in message.tool_calls:
+                    output.append(f"  Tool Name: {tool_call['name']}\n")
+                    try:
+                        args = json.loads(tool_call['args'])
+                    except (json.JSONDecodeError, TypeError):
+                        args = tool_call['args']
+                    output.append(f"  Tool Arguments: {args}\n")
+        elif isinstance(message, ToolMessage):
+            output.append(
+                f"ToolMessage: Tool Name: {message.name}  Tool content: {message.content}\n"
+            )
+    return "".join(output)

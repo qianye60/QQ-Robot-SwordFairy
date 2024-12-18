@@ -11,17 +11,17 @@ from nonebot.params import CommandArg, EventMessage, EventPlainText
 from nonebot.exception import MatcherException
 from nonebot.plugin import PluginMetadata
 
-from langchain_core.messages import SystemMessage, HumanMessage, AIMessage, ToolMessage
+from langchain_core.messages import HumanMessage, AIMessage, ToolMessage
 from langgraph.checkpoint.memory import MemorySaver
 
-from typing import List, Dict, Union
+from typing import Dict
 from datetime import datetime
 from random import choice
 from .config import Config
-from .graph import build_graph, get_llm
+from .graph import build_graph, get_llm, format_messages_for_print
 import os
 import re
-import json
+import asyncio
 
 
 
@@ -38,32 +38,6 @@ os.environ["OPENAI_API_KEY"] = plugin_config.llm.api_key
 os.environ["OPENAI_BASE_URL"] = plugin_config.llm.base_url
 os.environ["GOOGLE_API_KEY"] = plugin_config.llm.google_api_key
 
-def format_messages_for_print(
-    messages: List[Union[SystemMessage, HumanMessage, AIMessage, ToolMessage]]
-) -> str:
-    """格式化 LangChain 消息列表，提取并格式化 SystemMessage, HumanMessage, AIMessage (包括工具调用), 和 ToolMessage 的内容."""
-    output = []
-    for message in messages:
-        if isinstance(message, SystemMessage):
-            output.append(f"SystemMessage: {message.content}\n")
-        elif isinstance(message, HumanMessage):
-            output.append(f"HumanMessage: {message.content}\n")
-        elif isinstance(message, AIMessage):
-            output.append(f"AIMessage: {message.content}\n")
-            if message.tool_calls:
-                for tool_call in message.tool_calls:
-                    output.append(f"  Tool Name: {tool_call['name']}\n")
-                    try:
-                        args = json.loads(tool_call['args'])
-                    except (json.JSONDecodeError, TypeError):
-                        args = tool_call['args']
-                    output.append(f"  Tool Arguments: {args}\n")
-        elif isinstance(message, ToolMessage):
-            output.append(
-                f"ToolMessage: Tool Name: {message.name}  Tool content: {message.content}\n"
-            )
-    return "".join(output)
-
 # 会话模板
 class Session:
     def __init__(self, thread_id: str):
@@ -76,26 +50,31 @@ class Session:
 # "group_123456_789012": Session对象1
 sessions: Dict[str, Session] = {}
 
-def get_or_create_session(thread_id: str) -> Session:
-    """获取或创建会话"""
-    if thread_id not in sessions:
-        sessions[thread_id] = Session(thread_id)
-    session = sessions[thread_id]
-    session.last_accessed = datetime.now()
+# 添加异步锁保护sessions字典
+sessions_lock = asyncio.Lock()
+
+async def get_or_create_session(thread_id: str) -> Session:
+    """异步获取或创建会话"""
+    async with sessions_lock:
+        if thread_id not in sessions:
+            sessions[thread_id] = Session(thread_id)
+        session = sessions[thread_id]
+        session.last_accessed = datetime.now()
     return session
 
-def cleanup_old_sessions():
-    """按配置保存数量清理过期的会话"""
-    if len(sessions) > plugin_config.plugin.max_sessions:
-        # 按最后访问时间排序，删除最旧的会话
-        sorted_sessions = sorted(
-            sessions.items(),
-            key=lambda x: x[1].last_accessed,
-            reverse=True
-        )
-        # 保留配置指定数量的会话
-        for thread_id, _ in sorted_sessions[plugin_config.plugin.max_sessions:]:
-            del sessions[thread_id]
+async def cleanup_old_sessions():
+    """异步清理过期的会话"""
+    async with sessions_lock:
+        if len(sessions) > plugin_config.plugin.max_sessions:
+            # 按最后访问时间排序，删除最旧的会话
+            sorted_sessions = sorted(
+                sessions.items(),
+                key=lambda x: x[1].last_accessed,
+                reverse=True
+            )
+            # 保留配置指定数量的会话
+            for thread_id, _ in sorted_sessions[plugin_config.plugin.max_sessions:]:
+                del sessions[thread_id]
 
 # 初始化模型和对话图
 llm = get_llm()
@@ -157,7 +136,7 @@ async def handle_chat(
     if not isinstance(event, GroupMessageEvent) and not plugin_config.plugin.enable_private:
         await chat_handler.finish("不可以在私聊中使用")
         
-    # 获取用户名 (根据配置决定是否启用)
+    # 获取用户名
     user_name = ""  # 初始化为空字符串
     if plugin_config.plugin.enable_username:
         user_name = event.sender.nickname if event.sender.nickname else event.sender.card
@@ -211,8 +190,8 @@ async def handle_chat(
         thread_id = f"private_{event.user_id}"
 
     print(f"Current thread: {thread_id}")
-    cleanup_old_sessions()
-    session = get_or_create_session(thread_id)
+    await cleanup_old_sessions()
+    session = await get_or_create_session(thread_id)
 
     # 如果当前会话没有图，则创建一个
     if session.graph is None:
@@ -225,12 +204,15 @@ async def handle_chat(
         else:
             message_content = full_content
 
-        result = session.graph.invoke(
+        loop = asyncio.get_running_loop()
+        result = await loop.run_in_executor(
+            None,
+            session.graph.invoke,
             {"messages": [HumanMessage(content=message_content)]},
-            config={"configurable": {"thread_id": thread_id}},
+            {"configurable": {"thread_id": thread_id}},
         )
-        formatted_output = format_messages_for_print(result["messages"])
-        print(formatted_output)
+        # formatted_output = format_messages_for_print(result["messages"])
+        # print(formatted_output)
 
         if not result["messages"]:
             response = "对不起，我现在无法回答。"
@@ -273,7 +255,7 @@ async def handle_chat(
 
 
 
-# 开关群聊会话隔离
+
 group_chat_isolation = on_command(
     "chat group", 
     priority=5, 
@@ -309,8 +291,9 @@ async def handle_group_chat_isolation(args: Message = CommandArg(), event: Event
     else:
         keys_to_remove = [key for key in sessions if key.startswith("private_")]
 
-    for key in keys_to_remove:
-        del sessions[key]
+    async with sessions_lock:
+        for key in keys_to_remove:
+            del sessions[key]
 
 
     await group_chat_isolation.finish(
@@ -354,7 +337,8 @@ async def handle_chat_command(args: Message = CommandArg()):
         try:
             llm = get_llm(model_name)
             graph_builder = build_graph(plugin_config, llm)
-            sessions.clear()
+            async with sessions_lock:
+                sessions.clear()
             await chat_command.finish(f"已切换到模型: {model_name}")
         except MatcherException:
             raise
@@ -363,7 +347,8 @@ async def handle_chat_command(args: Message = CommandArg()):
             
     elif command == "clear":
         # 处理清理历史会话
-        sessions.clear()
+        async with sessions_lock:
+            sessions.clear()
         await chat_command.finish("已清理所有历史会话。")
     
     else:
