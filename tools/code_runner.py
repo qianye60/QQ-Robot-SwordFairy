@@ -251,7 +251,7 @@ def code_runner(source_code: str, language: str, stdin: str = None):
     """运行代码并返回详细的运行数据和结果。
     Args:
         source_code: 保持原格式的源代码
-        language: 编程语言  e.g., "python3", "python2", "c++14", "c7", "c", "java", "javascript", "typescript5"
+        language: 编程语言  e.g., python3,python2,Assembly,Bash,C,C++,Clojure,C#,COBOL,Common Lisp,D,Elixir,F#,Fortran,Go,Groovy,Haskell,Java,JavaScript,Kotlin,Lua,OCaml,Octave,Pascal,Perl,PHP,Plain Text,Python,Python2,R,Ruby,Rust,Scala,SQL,Swift,TypeScript,Visual Basic.Net
         stdin: 需要运行程序的标准输入，可选，默认为 None
     """
     # print("********************")
