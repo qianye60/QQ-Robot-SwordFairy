@@ -6,8 +6,9 @@ from .config import config
 import requests
 import base64
 import json
+import time
 import re
-
+import os
 code_runner = config.get("code_runner", {})
 
 judge0_api_key = code_runner.get("judge0_api_key")
@@ -18,28 +19,68 @@ CACHE_FILE = "languages_cache.json"
 UPDATE_INTERVAL = 2 * 24 * 60 * 60
 # submit_fields = "stdout,stderr,compile_output,exit_code,exit_signal,created_at,finished_at,time,wall_time,memory,source_code"
 submit_fields = "*"
-# 定义需要转义的字符
-escaped_chars = {
-        '\\': '\\\\',
-        '\n': '\\n',
-        '\t': '\\t',
-        '\r': '\\r',
-        '\b': '\\b',
-        '\f': '\\f',
-        '\a': '\\a',
-        '"': '\\"',
-        "'": "\\'"
-}
 
-# 语言匹配id
+_language_cache = None
 def get_and_format_languages_as_dict():
-    with open(CACHE_FILE, "r") as f:
-        data = json.load(f)
-    languages = data["data"]
-    formatted_languages = {}
-    for lang, versions in languages.items():
-        formatted_languages[lang] = versions
-    return formatted_languages
+    """
+    从 Judge0 API 获取语言列表，并格式化为以语言名为键的字典。
+    使用文件缓存结果，并根据指定的时间间隔更新缓存。
+    """
+    def fetch_from_api():
+        """从 API 获取数据并更新缓存文件"""
+        print("Fetching languages from API...")
+        url = f"{judge0_url}/languages"
+        headers = {
+            'X-Auth-Token': judge0_api_key,
+        }
+        try:
+            response = requests.get(url, headers=headers)
+            response.raise_for_status()
+            languages = response.json()
+            formatted_languages = {}
+            for lang in languages:
+                lang_id = lang["id"]
+                lang_name = lang["name"]
+                parts = lang_name.split("(", 1)
+                name = parts[0].strip()
+                if len(parts) > 1:
+                    version = parts[1].replace(")", "").strip()
+                else:
+                    version = ""
+                if name not in formatted_languages:
+                    formatted_languages[name] = []
+                formatted_languages[name].append({"id": lang_id, "version": version})
+            # 更新缓存文件
+            with open(CACHE_FILE, "w") as f:
+                json.dump({"timestamp": time.time(), "data": formatted_languages}, f)
+            return formatted_languages
+        except requests.exceptions.RequestException as e:
+            print(f"An error occurred: {e}")
+            # 如果API请求失败且有缓存文件，则返回缓存数据
+            if os.path.exists(CACHE_FILE):
+                with open(CACHE_FILE, "r") as f:
+                    cached_data = json.load(f)
+                    print("Using cached data due to API error.")
+                    return cached_data["data"]
+            return None
+    # 检查缓存文件是否存在以及是否过期
+    if os.path.exists(CACHE_FILE):
+        with open(CACHE_FILE, "r") as f:
+            try:
+                cached_data = json.load(f)
+                timestamp = cached_data.get("timestamp", 0)
+                if time.time() - timestamp < UPDATE_INTERVAL:
+                    print("Using cached languages data.")
+                    return cached_data["data"]
+                else:
+                    print("Cached data is outdated.")
+                    return fetch_from_api()
+            except json.JSONDecodeError:
+                print("Error decoding cached data.")
+                return fetch_from_api()
+    else:
+        print("Cache file not found.")
+        return fetch_from_api()
 
 def normalize_language_name(query_name):
     """规范化语言名称"""
@@ -51,7 +92,7 @@ def normalize_language_name(query_name):
         "visual basic.net": "visual basic.net",
         "visual basic net": "visual basic.net",
         "vb.net": "visual basic.net",
-        "objc": "objective-c", # 添加 objc 作为 objective-c 的别名
+        "objc": "objective-c",
     }
     return name_mapping.get(query_name, query_name)
     
@@ -91,7 +132,11 @@ def find_best_language_match_dict(query):
     """
     根据查询字符串在语言字典中找到最佳匹配的语言。
     """
-    lang_dict = get_and_format_languages_as_dict()
+    global _language_cache
+    if _language_cache is None:
+         _language_cache = get_and_format_languages_as_dict()
+    if not _language_cache:
+        return None
 
     query = query.lower()
     matches = []
@@ -110,7 +155,7 @@ def find_best_language_match_dict(query):
         query_name = "c++"
     query_name = normalize_language_name(query_name)
 
-    for lang_name, versions in lang_dict.items():
+    for lang_name, versions in _language_cache.items():
         lang_name_lower = lang_name.lower()
 
         # 3. 名称匹配 
@@ -230,11 +275,8 @@ def base64_code(source_code, stdin=None):
     对源代码进行 Base64 编码。
     如果提供了 stdin，也进行 Base64 编码。
     """
-    # 彻底去除多余的反斜杠
     source_code = source_code.replace('\\\\', '\\')
-    # 彻底处理 HTML 实体编码
     source_code = source_code.replace('[', '[').replace(']', ']')
-    # 去除多余的换行符
     source_code = source_code.replace('\\n', '\n')
     
     encoded_source_code = base64.b64encode(source_code.encode("utf-8")).decode("utf-8")
@@ -261,9 +303,6 @@ def code_runner(source_code: str, language: str, stdin: str = None):
     if language_id is None:
         return "未找到匹配的编程语言。"
 
-    # # 对源代码中的特殊字符进行转义
-    # for char, escaped_char in escaped_chars.items():
-    #     source_code = source_code.replace(char, escaped_char)
     base64_result = base64_code(source_code, stdin)
     base64_source_code = base64_result["source_code"]
     base64_stdin = base64_result.get("stdin")
