@@ -259,7 +259,7 @@ def fal_draw(prompt: str, image_size: str = "square_hd", style: str = "any"):
                         return None # 如果解码失败，返回 None
                else:
                     print("URL is not a Base64 data URI.")
-                    return url  # 返回URL
+                    return "图片: " + url  # 返回URL
            else:
                 print("Image URL not found in the response")
                 return None  # 没有 URL，返回 None
