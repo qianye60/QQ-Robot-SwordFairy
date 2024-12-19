@@ -8,9 +8,9 @@ min_length = config.get('jina', {}).get('min_length', 10)
 
 @tool
 def jina_search(query: str):
-    """Query in a search engine
+    """在搜索引擎中查询
     Args:
-        query: Query content
+        query: 要查询的内容
     """
     url = f'https://s.jina.ai/{query}'
     headers = {

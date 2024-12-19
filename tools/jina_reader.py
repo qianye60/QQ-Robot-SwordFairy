@@ -8,9 +8,9 @@ min_length = config.get('jina', {}).get('min_length', 10)
 
 @tool
 def jina_reader(url: str):
-    """Fetch URL content
+    """获取URL内容
     Args:
-        url: The URL to fetch.
+        url: 需要获取内容的URL
     """
 
     url = f'https://r.jina.ai/{url}'

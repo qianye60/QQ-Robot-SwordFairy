@@ -3,9 +3,7 @@ from pyquery import PyQuery as pq
 import datetime
 
 def get_github_trending():
-    """
-    抓取 GitHub Trending 页面，并返回 Markdown 格式的列表内容。
-    如果出错，返回包含错误信息的字符串。
+    """抓取 GitHub Trending 页面，并返回 Markdown 格式的列表内容。如果出错，返回包含错误信息的字符串。
     Args:
         None
     """

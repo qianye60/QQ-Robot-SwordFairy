@@ -274,9 +274,9 @@ def fal_draw(prompt: str, image_size: str = "square_hd", style: str = "any"):
 from langchain_core.tools import tool
 @tool
 def draw(prompt: str, image_size: str = "square_hd", style: str = "any"):
-    """提交画图请求并返回图片URL
+    """根据prompt要求进行绘画然后返回链接
     Args:
-         prompt: 绘画提示词
+         prompt: 要画的内容
          image_size: 图片尺寸，可选值为 "square_hd", "square", "portrait_4_3", "portrait_16_9", "landscape_4_3", "landscape_16_9". 默认为 "square_hd"。
          style: 图片风格，可选值为 "any", "realistic_image", "digital_illustration", "vector_illustration". 默认为 "any"。
     """
