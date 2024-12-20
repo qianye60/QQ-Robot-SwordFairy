@@ -17,7 +17,6 @@ def optimization_prompt(prompt: str) -> str:
     client = OpenAI()
 
     system_prompt = prompt_all.get("draw")
-    print(system_prompt)
     completion = client.chat.completions.create(
         model=model,
         messages=[{"role": "system", "content": system_prompt}, {"role": "user", "content": prompt}],
