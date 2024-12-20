@@ -1,7 +1,8 @@
 FROM ghcr.io/astral-sh/uv:bookworm-slim
 
 # 安装 tini 作为初始化系统
-RUN apt-get update && apt-get install -y tini librsvg2-bin \
+RUN apt-get update \
+    && apt-get install -y tini librsvg2-bin fonts-wqy-microhei fonts-wqy-zenhei fonts-noto-cjk fonts-arphic-uming fonts-arphic-ukai\
     && rm -rf /var/lib/apt/lists/*
 
 LABEL maintainer="mgrsc <mail@occult.ac.cn>"
