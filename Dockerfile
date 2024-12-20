@@ -4,8 +4,6 @@ FROM ghcr.io/astral-sh/uv:bookworm-slim
 RUN apt-get update && apt-get install -y tini librsvg2-bin \
     && rm -rf /var/lib/apt/lists/*
 
-ENTRYPOINT ["/usr/bin/tini", "--"]
-
 LABEL maintainer="mgrsc <mail@occult.ac.cn>"
 
 WORKDIR /app
@@ -22,6 +20,9 @@ ENV PATH="/app/.venv/bin:$PATH"
 # 复制项目文件
 COPY . /app
 
+# 赋予 entrypoint.sh 执行权限
+RUN chmod +x /app/entrypoint.sh
+
 # 使用 uv 安装依赖
 RUN uv sync --frozen --no-dev
 
@@ -35,4 +36,5 @@ ENV COMMAND_SEP='["."]'
 EXPOSE 8080 5000
 
 # 启动命令
-ENTRYPOINT ["/app/entrypoint.sh"]
+ENTRYPOINT ["/usr/bin/tini", "--"]
+CMD ["/app/entrypoint.sh"]
