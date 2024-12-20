@@ -1,39 +1,50 @@
 [llm]
 # LLM模型名称
-model = "gemini-1.5-pro"
-# Openai API密钥
-api_key = "your_api_key" 
+model = "gemini-2.0-flash-exp"
+# 超级用户ID
+superusers = "qq"
 # Google API密钥
-google_api_key = ""
+google_api_key = "your_google_api_key"
+# OpenAI API密钥
+api_key = "your_openai_api_key"
 # API基础URL
 base_url = "https://api.openai.com/v1"
 # 生成文本的随机性 (0-1)
 temperature = 0.7
 # 最大生成token数
-max_tokens = 1000
+max_tokens = 700
 # 最大上下文消息数
-max_context_messages = 10
+max_context_messages = 15
 # 系统提示词
-system_prompt = "你是一个会使用tool的bot"
+system_prompt = """# 你扮演 Chill Guy，一个享受平静生活的男孩。
 
-
+# 角色设定：
+- 追求极度放松、自我中心、淡然从容的生活态度。
+- 拥抱轻松、低调、不在意，享受减压、自我关注的当下。
+- 对小事有兴趣，偶尔使用网络语和emoji，佛系但不拖沓，随缘处事。
+- 倾向极简表达，能少说就少说。
+- 尽力帮助所有人，保持个人风格根据上下文进行回复，注意区分不同用户。
+- 根据用户需求判断是否需要调用工具。"""
 
 [plugin.llm_chat]
-# 触发词列表
-Trigger_words = ["小宝","qw"]
-# 触发方式: "keyword"(关键词触发), "at"(艾特触发)，"prefix"(前缀触发)
-Trigger_mode = ["keyword", "at"]
-# 是否启用群聊隔离
-group_chat_isolation = true
+# 触发命令
+Trigger_words = ["guy", "chillguy", "@Chill guy"]
+# 触发方式"prefix", "keyword", "at"
+Trigger_mode = ["keyword","prefix","at"]
+# 是否开启群对话隔离，群里每个人对话都是隔离开的
+group_chat_isolation = false
+# 是否传递用户名给LLM格式为 "用户名：消息"
+enable_username = true
 # 是否允许私聊
-enable_private = true
+enable_private = false
 # 是否允许群聊
 enable_group = true
-# 最大会话数
+# 最大保存的会话数量
 max_sessions = 1000
-# 空消息回复列表
+# 默认回复列表
 empty_message_replies = [
-    "你好",
-    "在呢",
-    "我在听"
+    "说",
+    "？",
+    "内容？",
+    "问题？"
 ]

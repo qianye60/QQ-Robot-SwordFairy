@@ -1,5 +1,6 @@
 [tools]
 builtin = ["tavily_search"]  # 启用内置的tavily搜索工具
+# 工具有analyze_image,code_runner, divination, draw, get_github_trending, get_time, get_weather_data, jina_fact_checking, jina_reader, jina_search, svg_card
 enabled = ["get_time"]  # 启用外部工具列表
 
 [tavily]
@@ -9,7 +10,7 @@ max_results = 5  # 搜索结果最大数量
 [img_analysis]
 new_api_key = ""  # 在此填入图像分析服务的API密钥
 new_base_url = ""  # 图像分析服务的基础URL
-model = "gemini-exp-1206"  # 使用的模型名称
+model = "gemini-1.5-pro-latest"  # 使用的模型名称
 img_folder = "img"  # 图像文件存储目录
 
 [openweather]
@@ -17,5 +18,26 @@ api_key = ""  # 在此填入OpenWeather API密钥
 
 [jina]
 api_key = ""  # 在此填入Jina API密钥
-top_n = 50  # 返回结果的最大数量
+top_n = 30  # 返回结果的最大数量
 min_length = 10  # 最小文本长度要求
+
+[divination]
+api_key = ""  # 在此填入占卜服务的API密钥
+base_url = ""  # 占卜服务的基础URL
+model = "llama-3.3-70b-instruct"  # 使用的模型名称
+
+[draw]
+fal_key = ""  # 在此填入FAL服务的API密钥
+openai_api_key = ""  # 在此填入OpenAI API密钥
+openai_base_url = ""  # OpenAI服务的基础URL
+model = "gemini-1.5-pro-latest"  # 使用的模型名称
+
+[code_runner]
+judge0_url = ""  # Judge0服务的URL
+judge0_api_key = ""  # 在此填入Judge0 API密钥
+cpu_time_limit = 5  # CPU时间限制
+wall_time_limit = 8  # 总时间限制
+
+[svg_card]
+claude_api_key = ""  # 在此填入Claude API密钥
+claude_base_url = ""  # Claude服务的基础URL

@@ -5,6 +5,9 @@ build/
 dist/
 wheels/
 *.egg-info
+languages_cache.json
+temp_server/
+test.py
 
 # Virtual environments
 .venv
@@ -12,4 +15,3 @@ config.toml
 config-tools.toml
 img/
 .env
-languages_cache.json

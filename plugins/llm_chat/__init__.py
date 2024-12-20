@@ -18,9 +18,11 @@ from typing import Dict
 from datetime import datetime
 from random import choice
 from .config import Config
-import cairosvg
+from pathlib import Path
+import subprocess
 import asyncio
 import base64
+import uuid
 import httpx
 import os
 import re
@@ -244,8 +246,7 @@ async def handle_chat(
         response = f"抱歉，在处理您的请求时出现问题。错误信息：{e}"
         
     # 检查是否有图片链接，并发送图片或文本消息
-    image_url_pattern = re.compile(r'https?://[^\s]+?\.(?:png|jpg|jpeg|gif|bmp|webp|svg)', re.IGNORECASE)
-    match = image_url_pattern.search(response)
+    match = re.search(r'https?://[^\s]+?\.(?:png|jpg|jpeg|gif|bmp|webp|svg)', response, re.IGNORECASE)
 
     if match:
         image_url = match.group(0)
@@ -255,25 +256,39 @@ async def handle_chat(
             try:
                 async with httpx.AsyncClient() as client:
                     resp = await client.get(image_url)
-                    resp.raise_for_status()  # 确保请求成功
+                    resp.raise_for_status()
                     svg_data = resp.content
+
+                filename = f"{uuid.uuid4().hex}.png"
+                output_path = Path("temp_server") / filename
+                
+                subprocess.run(
+                    ["rsvg-convert", "-f", "png", "-o", str(output_path)],
+                    input=svg_data,
+                    check=True,
+                )
+                
+                with open(output_path,"rb") as f:
+                    image_data = f.read()
+                base64_data = base64.b64encode(image_data).decode()
+                image_segment = MessageSegment.image(f"base64://{base64_data}")
+                await chat_handler.finish(Message(message_content) + image_segment)
                 
 
-                png_data = cairosvg.svg2png(bytestring=svg_data)
-                base64_encoded = base64.b64encode(png_data).decode()
-                
-                await chat_handler.finish(Message(message_content) + MessageSegment.image(f"base64://{base64_encoded}"))
             except MatcherException:
                 raise
             except Exception as e:
-                await chat_handler.finish(Message(message_content) + MessageSegment.text(f" (SVG 图片转换失败: {e})"))
+                await chat_handler.finish(Message(message_content) + MessageSegment.text(f" (未知错误: {e})"))
+
         else:
             try:
                 await chat_handler.finish(Message(message_content) + MessageSegment.image(image_url))
+            except ActionFailed:
+                await chat_handler.finish(Message(message_content) + MessageSegment.text(" (图片发送失败)"))
             except MatcherException:
                 raise
-            except ActionFailed as e:
-                await chat_handler.finish(Message(message_content) + MessageSegment.text(" (图片发送失败)"))
+            except Exception as e :
+                 await chat_handler.finish(Message(message_content) + MessageSegment.text(f" (未知错误： {e})"))
     else:
         await chat_handler.finish(Message(response))
 

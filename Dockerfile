@@ -1,7 +1,7 @@
 FROM ghcr.io/astral-sh/uv:bookworm-slim
 
 # 安装 tini 作为初始化系统
-RUN apt-get update && apt-get install -y tini \
+RUN apt-get update && apt-get install -y tini librsvg2-bin \
     && rm -rf /var/lib/apt/lists/*
 
 ENTRYPOINT ["/usr/bin/tini", "--"]
@@ -32,7 +32,7 @@ ENV COMMAND_START='["/"]'
 ENV COMMAND_SEP='["."]'
 
 # 暴露端口
-EXPOSE 8080
+EXPOSE 8080 5000
 
 # 启动命令
-CMD ["python", "bot.py"]
+ENTRYPOINT ["/app/entrypoint.sh"]
