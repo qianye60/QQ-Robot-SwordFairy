@@ -7,7 +7,6 @@ def load_toml_data(folder_name: str) -> Dict[str, Dict]:
     加载指定文件夹下所有 .toml 文件中的数据。
     """
     data_folder = Path(__file__).resolve().parents[1] / folder_name
-    print(data_folder)
     all_data: Dict[str, Dict] = {}
 
     if not data_folder.exists():

@@ -4,6 +4,7 @@ from langchain_core.tools import tool
 from datetime import datetime, timezone, timedelta
 from .config import config
 import requests
+import codecs
 import base64
 import json
 import time
@@ -18,7 +19,7 @@ judge0_url = code_runner.get("judge0_url")
 CACHE_FILE = "languages_cache.json"
 UPDATE_INTERVAL = 2 * 24 * 60 * 60
 # submit_fields = "stdout,stderr,compile_output,exit_code,exit_signal,created_at,finished_at,time,wall_time,memory,source_code"
-submit_fields = "*"
+submit_fields = "stdout,stderr,compile_output,message,exit_code,exit_signal,status,created_at,finished_at,time,wall_time,memory,compile_output,language,status"
 
 _language_cache = None
 def get_and_format_languages_as_dict():
@@ -82,7 +83,7 @@ def get_and_format_languages_as_dict():
         print("Cache file not found.")
         return fetch_from_api()
 
-def normalize_language_name(query_name):
+def _normalize_language_name(query_name):
     """规范化语言名称"""
     name_mapping = {
         "c#": "csharp",
@@ -96,7 +97,7 @@ def normalize_language_name(query_name):
     }
     return name_mapping.get(query_name, query_name)
     
-def is_name_match(query_name, lang_name_lower):
+def _is_name_match(query_name, lang_name_lower):
     """判断语言名称是否匹配"""
     if query_name == lang_name_lower:
         return True
@@ -114,7 +115,7 @@ def is_name_match(query_name, lang_name_lower):
         return True
     return False
     
-def is_version_match(query_name, query_version, lang_version):
+def _is_version_match(query_name, query_version, lang_version):
     """判断版本是否匹配"""
     if not query_version:
         return True
@@ -153,18 +154,18 @@ def find_best_language_match_dict(query):
     # 2. 特殊处理 C/C++ 和规范化语言名称
     if query_name == "c" and plus_signs:
         query_name = "c++"
-    query_name = normalize_language_name(query_name)
+    query_name = _normalize_language_name(query_name)
 
     for lang_name, versions in _language_cache.items():
         lang_name_lower = lang_name.lower()
 
         # 3. 名称匹配 
-        if is_name_match(query_name, lang_name_lower):
+        if _is_name_match(query_name, lang_name_lower):
             for version_info in versions:
                 lang_version = version_info["version"]
 
                 # 4. 版本匹配
-                if is_version_match(query_name, query_version, lang_version):
+                if _is_version_match(query_name, query_version, lang_version):
                     matches.append((version_info, lang_version))
 
     if not matches:
@@ -246,7 +247,9 @@ def format_submission_result(result):
     for key in ["stdout", "stderr", "compile_output", "source_code", "message"]:
         if key in result and result[key]:
             try:
-                formatted_result[key] = base64.b64decode(result[key]).decode("utf-8")
+                # 移除 base64 编码字符串中的换行符
+                cleaned_base64_string = result[key].replace('\r\n', '').replace('\n', '').replace('\r','')
+                formatted_result[key] = base64.b64decode(cleaned_base64_string).decode("utf-8")
             except Exception as e:
                 formatted_result[key] = f"Decode error: {e}"
         else:
@@ -259,9 +262,13 @@ def format_submission_result(result):
             try:
                 datetime_obj = datetime.fromisoformat(result[key].replace("Z", "+00:00"))
                 china_time = datetime_obj.astimezone(china_tz)
-                formatted_result[key] = china_time.strftime("%Y-%m-%d %H:%M:%S")
+                formatted_result[key] = china_time.strftime("%H:%M:%S")
             except ValueError as e:
                 formatted_result[key] = f"Parse error: {e}"
+    
+    # 格式化内存单位
+    if "memory" in result and result["memory"]:
+        formatted_result["memory"] = f"{result['memory'] / 1024:.2f} KB"
 
     # 移除 status 的id，description。
     if "status" in formatted_result:
@@ -275,9 +282,12 @@ def base64_code(source_code, stdin=None):
     对源代码进行 Base64 编码。
     如果提供了 stdin，也进行 Base64 编码。
     """
-    source_code = source_code.replace('\\\\', '\\')
-    source_code = source_code.replace('[', '[').replace(']', ']')
-    source_code = source_code.replace('\\n', '\n')
+
+    # 还原json dump的代码
+    if source_code.startswith('"') and source_code.endswith('"'):
+        source_code = source_code[1:-1]
+    # 使用 unicode_escape 来正确解码所有转义序列    
+    source_code = codecs.decode(source_code, 'unicode_escape')
     
     encoded_source_code = base64.b64encode(source_code.encode("utf-8")).decode("utf-8")
     result = {"source_code": encoded_source_code}
@@ -293,12 +303,9 @@ def code_runner(source_code: str, language: str, stdin: str = None):
     """运行代码并返回详细的运行数据和结果。
     Args:
         source_code: 保持原格式的源代码
-        language: 编程语言  e.g., python3,python2,Assembly,Bash,C,C++,Clojure,C#,COBOL,Common Lisp,D,Elixir,F#,Fortran,Go,Groovy,Haskell,Java,JavaScript,Kotlin,Lua,OCaml,Octave,Pascal,Perl,PHP,Plain Text,Python,Python2,R,Ruby,Rust,Scala,SQL,Swift,TypeScript,Visual Basic.Net
+        language: 编程语言.  可选：python3,python2,Assembly,Bash,C,C++,Clojure,C#,COBOL,Common Lisp,D,Elixir,F#,Fortran,Go,Groovy,Haskell,Java,JavaScript,Kotlin,Lua,OCaml,Octave,Pascal,Perl,PHP,Plain Text,Python,Python2,R,Ruby,Rust,Scala,SQL,Swift,TypeScript,Visual Basic.Net
         stdin: 需要运行程序的标准输入，可选，默认为 None
     """
-    # print("********************")
-    # print(source_code)
-    # print("********************")
     language_id = find_best_language_match_dict(language)
     if language_id is None:
         return "未找到匹配的编程语言。"
@@ -306,227 +313,9 @@ def code_runner(source_code: str, language: str, stdin: str = None):
     base64_result = base64_code(source_code, stdin)
     base64_source_code = base64_result["source_code"]
     base64_stdin = base64_result.get("stdin")
-    # print(base64_source_code, language_id, base64_stdin)
     result = submit_code(base64_source_code, language_id, base64_stdin)
-    # print(result)
     formatted_result = format_submission_result(result)
-    print(formatted_result)
     return formatted_result
 
 
 tools = [code_runner]
-
-
-
-
-# 全部语言测试
-# if __name__ == "__main__":
-    # test_cases = {
-    #     "Assembly": {
-    #         "code": "section .data\n    msg db 'Hello, World!', 0x0A\n    len equ $ - msg\n\nsection .text\n    global _start\n\n_start:\n    mov eax, 4\n    mov ebx, 1\n    mov ecx, msg\n    mov edx, len\n    int 0x80\n\n    mov eax, 1\n    xor ebx, ebx\n    int 0x80",
-    #         "language": "Assembly",
-    #         "expected_output": "Hello, World!\n"
-    #     },
-    #     "Bash": {
-    #         "code": "echo 'Hello, World!'",
-    #         "language": "Bash",
-    #         "expected_output": "Hello, World!\n"
-    #     },
-    #     "Basic": {
-    #         "code": "10 PRINT \"Hello, World!\"\n20 END",
-    #         "language": "Basic",
-    #         "expected_output": "Hello, World!\n"
-    #     },
-    #     "C": {
-    #         "code": "#include <stdio.h>\nint main() {\n    printf(\"Hello, World!\\n\");\n    return 0;\n}",
-    #         "language": "C",
-    #         "expected_output": "Hello, World!\n"
-    #     },
-    #     "C++": {
-    #         "code": "#include <iostream>\nint main() {\n    std::cout << \"Hello, World!\" << std::endl;\n    return 0;\n}",
-    #         "language": "C++",
-    #         "expected_output": "Hello, World!\n"
-    #     },
-    #     "Clojure": {
-    #         "code": '(println "Hello, World!")',
-    #         "language": "Clojure",
-    #         "expected_output": "Hello, World!\n"
-    #     },
-    #     "C#": {
-    #         "code": "using System;\npublic class Program {\n    public static void Main(string[] args) {\n        Console.WriteLine(\"Hello, World!\");\n    }\n}",
-    #         "language": "C#",
-    #         "expected_output": "Hello, World!\n"
-    #     },
-    #     "COBOL": {
-    #         "code": "       IDENTIFICATION DIVISION.\n       PROGRAM-ID. HELLO-WORLD.\n       PROCEDURE DIVISION.\n           DISPLAY \"Hello, World!\".\n           STOP RUN.",
-    #         "language": "COBOL",
-    #         "expected_output": "Hello, World!\n"
-    #     },
-    #     "Common Lisp": {
-    #         "code": '(format t "Hello, World!~%")',
-    #         "language": "Common Lisp",
-    #         "expected_output": "Hello, World!\n"
-    #     },
-    #     "D": {
-    #         "code": "import std.stdio;\nvoid main() {\n    writeln(\"Hello, World!\");\n}",
-    #         "language": "D",
-    #         "expected_output": "Hello, World!\n"
-    #     },
-    #     "Elixir": {
-    #         "code": "IO.puts \"Hello, World!\"",
-    #         "language": "Elixir",
-    #         "expected_output": "Hello, World!\n"
-    #     },
-    #     "Erlang": {
-    #         "code": "-module(main).\n-export([main/0]).\nmain() ->\n    io:fwrite(\"Hello, World!\\n\").",
-    #         "language": "Erlang",
-    #         "expected_output": "Hello, World!\n"
-    #     },
-    #     "Executable": {
-    #         "code": "",  # 可执行文件需要预先编译好
-    #         "language": "Executable",
-    #         "expected_output": ""
-    #     },
-    #     "F#": {
-    #         "code": "printfn \"Hello, World!\"",
-    #         "language": "F#",
-    #         "expected_output": "Hello, World!\n"
-    #     },
-    #     "Fortran": {
-    #         "code": "program hello\n    print *, 'Hello, World!'\nend program hello",
-    #         "language": "Fortran",
-    #         "expected_output": " Hello, World!\n"
-    #     },
-    #     "Go": {
-    #         "code": "package main\nimport \"fmt\"\nfunc main() {\n    fmt.Println(\"Hello, World!\")\n}",
-    #         "language": "Go",
-    #         "expected_output": "Hello, World!\n"
-    #     },
-    #     "Groovy": {
-    #         "code": "println 'Hello, World!'",
-    #         "language": "Groovy",
-    #         "expected_output": "Hello, World!\n"
-    #     },
-    #     "Haskell": {
-    #         "code": "main = putStrLn \"Hello, World!\"",
-    #         "language": "Haskell",
-    #         "expected_output": "Hello, World!\n"
-    #     },
-    #     "Java": {
-    #         "code": "public class Main {\n    public static void main(String[] args) {\n        System.out.println(\"Hello, World!\");\n    }\n}",
-    #         "language": "Java",
-    #         "expected_output": "Hello, World!\n"
-    #     },
-    #     "JavaScript": {
-    #         "code": "console.log('Hello, World!');",
-    #         "language": "JavaScript",
-    #         "expected_output": "Hello, World!\n"
-    #     },
-    #     "Kotlin": {
-    #         "code": "fun main() {\n    println(\"Hello, World!\")\n}",
-    #         "language": "Kotlin",
-    #         "expected_output": "Hello, World!\n"
-    #     },
-    #     "Lua": {
-    #         "code": "print('Hello, World!')",
-    #         "language": "Lua",
-    #         "expected_output": "Hello, World!\n"
-    #     },
-    #     "Objective-C": {
-    #         "code": "#import <Foundation/Foundation.h>\nint main() {\n    @autoreleasepool {\n        NSLog(@\"Hello, World!\");\n    }\n    return 0;\n}",
-    #         "language": "Objective-C",
-    #         "expected_output": "Hello, World!\n"
-    #     },
-    #     "OCaml": {
-    #         "code": "print_endline \"Hello, World!\";;",
-    #         "language": "OCaml",
-    #         "expected_output": "Hello, World!\n"
-    #     },
-    #     "Octave": {
-    #         "code": "disp('Hello, World!');",
-    #         "language": "Octave",
-    #         "expected_output": "Hello, World!\n"
-    #     },
-    #     "Pascal": {
-    #         "code": "program HelloWorld;\nbegin\n    writeln('Hello, World!');\nend.",
-    #         "language": "Pascal",
-    #         "expected_output": "Hello, World!\n"
-    #     },
-    #     "Perl": {
-    #         "code": "print \"Hello, World!\\n\";",
-    #         "language": "Perl",
-    #         "expected_output": "Hello, World!\n"
-    #     },
-    #     "PHP": {
-    #         "code": "<?php\necho 'Hello, World!\\n';\n?>",
-    #         "language": "PHP",
-    #         "expected_output": "Hello, World!\n"
-    #     },
-    #     "Plain Text": {
-    #         "code": "Hello, World!",
-    #         "language": "Plain Text",
-    #         "expected_output": "Hello, World!\n"
-    #     },
-    #     "Prolog": {
-    #         "code": "main :- write('Hello, World!'), nl.",
-    #         "language": "Prolog",
-    #         "expected_output": "Hello, World!\n"
-    #     },
-    #     "Python": {
-    #         "code": "print('Hello, World!')",
-    #         "language": "Python",
-    #         "expected_output": "Hello, World!\n"
-    #     },
-    #     "Python2": {
-    #         "code": "print 'Hello, World!'",
-    #         "language": "Python2",
-    #         "expected_output": "Hello, World!\n"
-    #     },
-    #     "R": {
-    #         "code": "print(\"Hello, World!\")",
-    #         "language": "R",
-    #         "expected_output": "[1] \"Hello, World!\"\n"
-    #     },
-    #     "Ruby": {
-    #         "code": "puts 'Hello, World!'",
-    #         "language": "Ruby",
-    #         "expected_output": "Hello, World!\n"
-    #     },
-    #     "Rust": {
-    #         "code": "fn main() {\n    println!(\"Hello, World!\");\n}",
-    #         "language": "Rust",
-    #         "expected_output": "Hello, World!\n"
-    #     },
-    #     "Scala": {
-    #         "code": "object Main extends App {\n  println(\"Hello, World!\")\n}",
-    #         "language": "Scala",
-    #         "expected_output": "Hello, World!\n"
-    #     },
-    #     "SQL": {
-    #         "code": "SELECT 'Hello, World!';",
-    #         "language": "SQL",
-    #         "expected_output": "Hello, World!\n"
-    #     },
-    #     "Swift": {
-    #         "code": "print(\"Hello, World!\")",
-    #         "language": "Swift",
-    #         "expected_output": "Hello, World!\n"
-    #     },
-    #     "TypeScript": {
-    #         "code": "console.log('Hello, World!');",
-    #         "language": "TypeScript",
-    #         "expected_output": "Hello, World!\n"
-    #     },
-    #     "Visual Basic.Net": {
-    #         "code": "Module Module1\n    Sub Main()\n        Console.WriteLine(\"Hello, World!\")\n    End Sub\nEnd Module",
-    #         "language": "Visual Basic.Net",
-    #         "expected_output": "Hello, World!\n"
-    #     }
-    # }
-    
-    # for lang_data in test_cases.values():
-    #     result = code_runner(lang_data["code"], lang_data["language"])
-    #     print(f"Language: {lang_data['language']}")
-    #     print(f"Result: {result}")
-    #     print("-" * 20)
-    

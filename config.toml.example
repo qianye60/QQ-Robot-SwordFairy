@@ -1,13 +1,13 @@
 [llm]
 # LLM模型名称
 model = "gemini-2.0-flash-exp"
-# 超级用户ID
+# 超级用户ID，用来控制bot
 superusers = "qq"
 # Google API密钥
 google_api_key = "your_google_api_key"
 # OpenAI API密钥
 api_key = "your_openai_api_key"
-# API基础URL
+# OpenAI API基础URL
 base_url = "https://api.openai.com/v1"
 # 生成文本的随机性 (0-1)
 temperature = 0.7

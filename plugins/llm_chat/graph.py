@@ -66,8 +66,8 @@ def build_graph(config: Config, llm):
         if config.llm.system_prompt:
             messages = [SystemMessage(content=config.llm.system_prompt)] + messages
         trimmed_messages = trimmer.invoke(messages)
-        print("-" * 50)
-        print(format_messages_for_print(trimmed_messages))
+        # print("-" * 50)
+        # print(format_messages_for_print(trimmed_messages))
         response = llm_with_tools.invoke(trimmed_messages)
         # print(f"chatbot: {response}")
         return {"messages": [response]}
