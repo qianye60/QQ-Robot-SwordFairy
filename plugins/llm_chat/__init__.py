@@ -253,7 +253,8 @@ async def handle_chat(
 
     if match:
         image_url = match.group(0)
-        message_content = response.replace(image_url, "")
+        pattern = rf'\[.*?\]\({re.escape(image_url)}\)|{re.escape(image_url)}'
+        message_content = re.sub(pattern, '', response)
 
         if image_url.endswith(".svg"):
             try:
