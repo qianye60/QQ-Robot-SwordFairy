@@ -2,7 +2,9 @@
 # LLM模型名称
 model = "gemini-2.0-flash-exp"
 # 超级用户ID，用来控制bot
-superusers = "qq"
+superusers = "qq
+# grop密钥
+groq_api_key = "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""
 # Google API密钥
 google_api_key = "your_google_api_key"
 # OpenAI API密钥
