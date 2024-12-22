@@ -10,6 +10,7 @@ class LLMConfig(BaseModel):
     groq_api_key: str = ""
     base_url: str = "https://api.openai.com/v1"
     temperature: float = 0.7
+    top_p: float = 1.0
     max_tokens: int = 1000
     system_prompt: Optional[str] = None
     max_context_messages: int = 10
@@ -50,6 +51,7 @@ class Config(BaseModel):
                 max_tokens=toml_config["llm"].get("max_tokens", 2000),
                 system_prompt=toml_config["llm"]["system_prompt"],
                 google_api_key=toml_config["llm"].get("google_api_key", ""),
+                top_p=toml_config["llm"].get("top_p", 1.0),
                 groq_api_key=toml_config["llm"].get("groq_api_key", ""),
             )
             

@@ -43,6 +43,7 @@ def get_llm(model=None):
                 temperature=plugin_config.llm.temperature,
                 max_tokens=plugin_config.llm.max_tokens,
                 google_api_key=plugin_config.llm.google_api_key,
+                top_p=plugin_config.llm.top_p,
             )
         else:
             print("使用 OpenAI")
@@ -52,6 +53,7 @@ def get_llm(model=None):
                 max_tokens=plugin_config.llm.max_tokens,
                 api_key=plugin_config.llm.api_key,
                 base_url=plugin_config.llm.base_url,
+                top_p=plugin_config.llm.top_p,
             )
     except Exception as e:
         print(f"模型初始化失败: {str(e)}")
