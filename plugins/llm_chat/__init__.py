@@ -243,7 +243,10 @@ async def handle_chat(
                 response = "对不起，我没有理解您的问题。"
     except Exception as e:
         print(f"调用 LangGraph 时发生错误: {e}")
-        response = f"抱歉，在处理您的请求时出现问题。错误信息：{e}"
+        async with sessions_lock:
+            if thread_id in sessions:
+                del sessions[thread_id]
+        response = f"""卧槽，报错了：{e}\n尝试自行修复中，聊聊别的吧！"""
         
     # 检查是否有图片链接，并发送图片或文本消息
     match = re.search(r'https?://[^\s]+?\.(?:png|jpg|jpeg|gif|bmp|webp|svg)', response, re.IGNORECASE)
