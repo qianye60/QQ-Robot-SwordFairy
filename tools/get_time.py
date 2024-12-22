@@ -1,7 +1,6 @@
 import datetime
 import pytz
 from langchain_core.tools import tool
-from typing import Optional
 
 @tool
 def get_time(timezone: str, format: str = "%Y-%m-%d %H:%M:%S"):

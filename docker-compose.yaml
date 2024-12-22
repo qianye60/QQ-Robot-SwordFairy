@@ -20,6 +20,8 @@ services:
     image: bitfennec/llmq-horizon:latest
     container_name: llmq-horizon
     restart: always
+    ports:
+      - "40000:5000"
     volumes:
       - ./config.toml:/app/config.toml
       - ./config-tools.toml:/app/config-tools.toml
