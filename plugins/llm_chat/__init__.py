@@ -18,12 +18,7 @@ from typing import Dict
 from datetime import datetime
 from random import choice
 from .config import Config
-from pathlib import Path
-import subprocess
 import asyncio
-import base64
-import uuid
-import httpx
 import os
 import re
 
@@ -249,50 +244,20 @@ async def handle_chat(
         response = f"""卧槽，报错了：{e}\n尝试自行修复中，聊聊别的吧！"""
         
     # 检查是否有图片链接，并发送图片或文本消息
-    match = re.search(r'https?://[^\s]+?\.(?:png|jpg|jpeg|gif|bmp|webp|svg)', response, re.IGNORECASE)
-
+    match = re.search(r'https?://[^\s]+?\.(?:png|jpg|jpeg|gif|bmp|webp)', response, re.IGNORECASE)
     if match:
         image_url = match.group(0)
         pattern = rf'\[.*?\]\({re.escape(image_url)}\)|{re.escape(image_url)}'
         message_content = re.sub(pattern, '', response)
 
-        if image_url.endswith(".svg"):
-            try:
-                async with httpx.AsyncClient() as client:
-                    resp = await client.get(image_url)
-                    resp.raise_for_status()
-                    svg_data = resp.content
-
-                filename = f"{uuid.uuid4().hex}.png"
-                output_path = Path("temp_server") / filename
-                
-                subprocess.run(
-                    ["rsvg-convert", "-f", "png", "-o", str(output_path)],
-                    input=svg_data,
-                    check=True,
-                )
-                
-                with open(output_path,"rb") as f:
-                    image_data = f.read()
-                base64_data = base64.b64encode(image_data).decode()
-                image_segment = MessageSegment.image(f"base64://{base64_data}")
-                await chat_handler.finish(Message(message_content) + image_segment)
-                
-
-            except MatcherException:
-                raise
-            except Exception as e:
-                await chat_handler.finish(Message(message_content) + MessageSegment.text(f" (未知错误: {e})"))
-
-        else:
-            try:
-                await chat_handler.finish(Message(message_content) + MessageSegment.image(image_url))
-            except ActionFailed:
-                await chat_handler.finish(Message(message_content) + MessageSegment.text(" (图片发送失败)"))
-            except MatcherException:
-                raise
-            except Exception as e :
-                 await chat_handler.finish(Message(message_content) + MessageSegment.text(f" (未知错误： {e})"))
+        try:
+            await chat_handler.finish(Message(message_content) + MessageSegment.image(image_url))
+        except ActionFailed:
+            await chat_handler.finish(Message(message_content) + MessageSegment.text(" (图片发送失败)"))
+        except MatcherException:
+            raise
+        except Exception as e :
+            await chat_handler.finish(Message(message_content) + MessageSegment.text(f" (未知错误： {e})"))
     else:
         await chat_handler.finish(Message(response))
 
