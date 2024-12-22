@@ -386,6 +386,23 @@ wheels = [
 ]
 
 [[package]]
+name = "groq"
+version = "0.13.1"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "anyio" },
+    { name = "distro" },
+    { name = "httpx" },
+    { name = "pydantic" },
+    { name = "sniffio" },
+    { name = "typing-extensions" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/90/75/3b3e6b9495ca8e2e7f08373412f2f3c5fd0d8cbe987905d7caebc84abba2/groq-0.13.1.tar.gz", hash = "sha256:588fd5bee984f4eb46ec89552778d5698b9e9614435defef868645c19463cbcc", size = 109709 }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/f0/ad/2bf9b91085b1d67e432bc3071378570e7fd0326c5c648376e6230d3fed99/groq-0.13.1-py3-none-any.whl", hash = "sha256:0c5d1d6df93de55de705fe73729b79baaa0c871f7575d6aa64b2962b56101b3e", size = 109114 },
+]
+
+[[package]]
 name = "grpcio"
 version = "1.68.1"
 source = { registry = "https://pypi.org/simple" }
@@ -635,6 +652,19 @@ wheels = [
 ]
 
 [[package]]
+name = "langchain-groq"
+version = "0.2.2"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "groq" },
+    { name = "langchain-core" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/41/1f/e806d8fe2ca7c7d3c64ce7450accf90cfac730f20a8630550d17cc365516/langchain_groq-0.2.2.tar.gz", hash = "sha256:eefc938255aff869789d90785279b5b990ef08e1bc81150133d9a788285111c6", size = 14810 }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/56/48/9ee597ab5b21dc7a166328a518ead1d28e02f70989a26f3b774276324552/langchain_groq-0.2.2-py3-none-any.whl", hash = "sha256:227c9db26861894d2e310cb20190f35f3713765558976e929a48714a32431eef", size = 14338 },
+]
+
+[[package]]
 name = "langchain-openai"
 version = "0.2.13"
 source = { registry = "https://pypi.org/simple" }
@@ -726,6 +756,7 @@ dependencies = [
     { name = "langchain-anthropic" },
     { name = "langchain-community" },
     { name = "langchain-google-genai" },
+    { name = "langchain-groq" },
     { name = "langchain-openai" },
     { name = "langgraph" },
     { name = "nonebot-adapter-onebot" },
@@ -744,6 +775,7 @@ requires-dist = [
     { name = "langchain-anthropic", specifier = ">=0.3.1" },
     { name = "langchain-community", specifier = ">=0.3.10" },
     { name = "langchain-google-genai", specifier = ">=2.0.6" },
+    { name = "langchain-groq", specifier = ">=0.2.2" },
     { name = "langchain-openai", specifier = ">=0.2.11" },
     { name = "langgraph", specifier = ">=0.2.56" },
     { name = "nonebot-adapter-onebot", specifier = ">=2.4.6" },

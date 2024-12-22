@@ -6,12 +6,14 @@ import tomli
 class LLMConfig(BaseModel):
     model: str
     api_key: Optional[str]
+    google_api_key: str = ""
+    groq_api_key: str = ""
     base_url: str = "https://api.openai.com/v1"
     temperature: float = 0.7
     max_tokens: int = 1000
     system_prompt: Optional[str] = None
     max_context_messages: int = 10
-    google_api_key: str = ""
+
 
 class PluginConfig(BaseModel):
     Trigger_words: List[str] = []
@@ -48,6 +50,7 @@ class Config(BaseModel):
                 max_tokens=toml_config["llm"].get("max_tokens", 2000),
                 system_prompt=toml_config["llm"]["system_prompt"],
                 google_api_key=toml_config["llm"].get("google_api_key", ""),
+                groq_api_key=toml_config["llm"].get("groq_api_key", ""),
             )
             
             plugin_config = PluginConfig(
