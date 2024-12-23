@@ -65,8 +65,8 @@ def fal_draw(prompt: str, image_size: str = "square_hd", style: str = "any") -> 
         if url:
             save_image(url)
             if url.startswith("data:image"):
-                return "图片: " + url
-            return "图片: " + url 
+                return "画好了: " + url
+            return "画好了: " + url 
     return None
 
 from langchain_core.tools import tool
