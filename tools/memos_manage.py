@@ -142,7 +142,7 @@ def memos_manage(operation: str, create_content: str = None, search_keyword: str
 
     Args:
         operation: 操作类型，可选值为 "create", "search", "delete".
-        create_content: 创建备忘录的内容 (仅当 operation 为 "create" 时使用).可选
+        create_content: 创建备忘录的内容，使用 ###$$$%%% 作为多条备忘录的分隔符 (仅当 operation 为 "create" 时使用).可选
         search_keyword: 检索备忘录的关键词,多个关键词以逗号分隔,不传则返回最新备忘录 e.g.我喜欢吃南瓜饼->"喜欢吃","南瓜饼" (仅当 operation 为 "search" 时使用). 可选
         delete_id: 要删除的备忘录的 id,支持多个id以逗号分隔 e.g. "1,2,3" (仅当 operation 为 "delete" 时使用). 可选
         limit: 限制搜索结果数量 (仅当 operation 为 "search" 时使用). 可选
@@ -164,7 +164,19 @@ def memos_manage(operation: str, create_content: str = None, search_keyword: str
     if (operation == "create"):
         if (not create_content):
             return {"error": "Missing 'create_content' for create operation."}
-        return _create_memo(base_url, headers, create_content, default_visibility)
+        MEMO_SEPARATOR = "###$$$%%%"
+        if isinstance(create_content, str):
+            contents_list = [cnt.strip() for cnt in create_content.split(MEMO_SEPARATOR) if cnt.strip()]
+        elif isinstance(create_content, list):
+            contents_list = create_content
+        else:
+            contents_list = [str(create_content)]
+
+        results = []
+        for cnt in contents_list:
+            create_result = _create_memo(base_url, headers, cnt, default_visibility)
+            results.append(create_result)
+        return {"results": results}
 
     elif (operation == "search"):
         return _search_memos(base_url, headers, default_page_size, user_id, search_keyword, limit)
@@ -194,3 +206,9 @@ tools = [memos_manage]
 # 删除多个备忘录
 # delete_result = memos_manage("delete", delete_id="93,94,95")
 # print("Delete Result:", delete_result)
+
+# 示例：创建多条备忘录 
+# """
+# create_result = memos_manage("create", create_content='''今天我最喜欢小猫,它真可爱###$$$%%%明天我最喜欢小狗,它也很可爱###$$$%%%后天我最喜欢小兔子''')
+# print("Create Result:", create_result)
+# """
