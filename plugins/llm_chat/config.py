@@ -15,10 +15,9 @@ class LLMConfig(BaseModel):
     system_prompt: Optional[str] = None
     max_context_messages: int = 10
 
-
 class PluginConfig(BaseModel):
-    Trigger_words: List[str] = []
-    Trigger_mode: List[str] = ["keyword", "at"]
+    trigger_words: List[str] = []
+    trigger_mode: List[str] = ["keyword", "at"]
     group_chat_isolation: bool = True
     enable_private: bool = True
     disabled_message: str = "Bot已禁用"
@@ -57,8 +56,8 @@ class Config(BaseModel):
             )
             
             plugin_config = PluginConfig(
-                Trigger_words=toml_config["plugin"]["llm_chat"]["Trigger_words"],
-                Trigger_mode=toml_config["plugin"]["llm_chat"]["Trigger_mode"],
+                trigger_words=toml_config["plugin"]["llm_chat"]["trigger_words"],
+                trigger_mode=toml_config["plugin"]["llm_chat"]["trigger_mode"],
                 group_chat_isolation=toml_config["plugin"]["llm_chat"]["group_chat_isolation"],
                 enable_private=toml_config["plugin"]["llm_chat"]["enable_private"],
                 disabled_message=toml_config["plugin"]["llm_chat"].get("disabled_message", "Bot已禁用"),

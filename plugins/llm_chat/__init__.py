@@ -83,8 +83,8 @@ graph_builder = build_graph(plugin_config, llm)
 
 def chat_rule(event: Event) -> bool:
     """定义触发规则"""
-    trigger_mode = plugin_config.plugin.Trigger_mode
-    trigger_words = plugin_config.plugin.Trigger_words
+    trigger_mode = plugin_config.plugin.trigger_mode
+    trigger_words = plugin_config.plugin.trigger_words
     msg = str(event.get_message())
 
     if "at" in trigger_mode and event.is_tome():
@@ -112,8 +112,8 @@ def remove_trigger_words(text: str, message: Message) -> str:
             text = text.replace(str(seg), "").strip()
     
     # 移除命令前缀
-    if hasattr(plugin_config.plugin, 'Trigger_words'):
-        for cmd in plugin_config.plugin.Trigger_words:
+    if hasattr(plugin_config.plugin, 'trigger_words'):
+        for cmd in plugin_config.plugin.trigger_words:
             if text.startswith(cmd):
                 text = text[len(cmd):].strip()
                 break
@@ -249,50 +249,27 @@ async def handle_chat(
             if thread_id in sessions:
                 del sessions[thread_id]
         response = f"""卧槽，报错了：{e}\n尝试自行修复中，聊聊别的吧！"""
-        
     # 检查是否有图片或视频链接，并发送图片或视频或文本消息
-    image_match = re.search(r'https?://[^\s]+?\.(?:png|jpg|jpeg|gif|bmp|webp|svg)', response, re.IGNORECASE)
+    image_match = re.search(r'https?://[^\s]+?\.(?:png|jpg|jpeg|gif|bmp|webp)', response, re.IGNORECASE)
     video_match = re.search(r'https?://[^\s]+?\.(?:mp4|avi|mov|mkv)', response, re.IGNORECASE)
     if image_match:
         image_url = image_match.group(0)
         message_content = response.replace(image_url, "")
-        if image_url.endswith(".svg"):
-            try:
-                async with httpx.AsyncClient() as client:
-                    resp = await client.get(image_url)
-                    resp.raise_for_status()
-                    svg_data = resp.content
-                filename = f"{uuid.uuid4().hex}.png"
-                output_path = Path("temp_server") / filename
-                
-                subprocess.run(
-                    ["rsvg-convert", "-f", "png", "-o", str(output_path)],
-                    input=svg_data,
-                    check=True,
-                )
-                
-                with open(output_path,"rb") as f:
-                    image_data = f.read()
-                base64_data = base64.b64encode(image_data).decode()
-                image_segment = MessageSegment.image(f"base64://{base64_data}")
-                await chat_handler.finish(Message(message_content) + image_segment)
-                
-            except MatcherException:
-                raise
-            except Exception as e:
-                await chat_handler.finish(Message(message_content) + MessageSegment.text(f" (未知错误: {e})"))
-        else:
-            try:
-                await chat_handler.finish(Message(message_content) + MessageSegment.image(image_url))
-            except ActionFailed:
-                await chat_handler.finish(Message(message_content) + MessageSegment.text(" (图片发送失败)"))
-            except MatcherException:
-                raise
-            except Exception as e :
-                 await chat_handler.finish(Message(message_content) + MessageSegment.text(f" (未知错误： {e})"))
+        # 移除Markdown链接格式
+        message_content = re.sub(r'\[([^\]]+)\]\([^)]+\)', r'\1', message_content)
+        try:
+            await chat_handler.finish(Message(message_content) + MessageSegment.image(image_url))
+        except ActionFailed:
+            await chat_handler.finish(Message(message_content) + MessageSegment.text(" (图片发送失败)"))
+        except MatcherException:
+            raise
+        except Exception as e :
+             await chat_handler.finish(Message(message_content) + MessageSegment.text(f" (未知错误： {e})"))
     elif video_match:
         video_url = video_match.group(0)
         message_content = response.replace(video_url, "")
+        # 移除Markdown链接格式
+        message_content = re.sub(r'\[([^\]]+)\]\([^)]+\)', r'\1', message_content)
         try:
             await chat_handler.finish(Message(message_content) + MessageSegment.video(video_url))
         except ActionFailed:
