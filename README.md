@@ -22,6 +22,15 @@ git clone https://github.com/Mgrsc/LLMQ-Horizon.git
 # 把示例文件改名
 mv config-tools.toml.example config-tools.toml
 mv config.toml.example config.toml
+
+# 参考下面编辑配置文件
+
+# 启动
+docker compose up -d
+# 修改配置仅需重启llmq
+docker compose down llmq
+# 关闭
+docker compose down
 ```
 
 ### 编辑napcat
@@ -77,7 +86,7 @@ empty_message_replies = [
 
 
 ## 编辑config-tools.toml
-
+```
 - img_analysis：视觉能力，填写视觉模型，仅支持openai请求，可以使用new-api等项目转换
 - code_runner：代码运行，需要安装judge0填写url和key
 - divination：占卜，填写openai格式的api和url可以和主模型一致
@@ -85,7 +94,7 @@ empty_message_replies = [
 - get_weather_data：天气信息，对接oenweather(https://openweathermap.org/api/one-call-3)
 - jina_fact_checking/jina_reader/jina_search: jina的模型https://jina.ai/
 - picture_api：随机图片
-
+```
 
 
 ## tools
