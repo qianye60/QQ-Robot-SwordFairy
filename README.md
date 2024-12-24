@@ -24,6 +24,12 @@ mv config-tools.toml.example config-tools.toml
 mv config.toml.example config.toml
 ```
 
+### 编辑napcat
+```
+cd napcat/config/
+mv onebot11_qq.json onebot11_<你的QQ>.json #改为你的qq号
+```
+
 ### 编辑compose
 
 ```
