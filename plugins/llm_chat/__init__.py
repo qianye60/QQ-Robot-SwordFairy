@@ -254,9 +254,9 @@ async def handle_chat(
     video_match = re.search(r'https?://[^\s]+?\.(?:mp4|avi|mov|mkv)', response, re.IGNORECASE)
     if image_match:
         image_url = image_match.group(0)
-        message_content = response.replace(image_url, "")
-        # 移除Markdown链接格式
-        message_content = re.sub(r'\[([^\]]+)\]\([^)]+\)', r'\1', message_content)
+        message_content = re.sub(r'!\[.*?\]\((.*?)\)', r'\1', response)
+        message_content = re.sub(r'\[.*?\]\((.*?)\)', r'\1', message_content)
+        message_content = message_content.replace(image_url, "").strip()
         try:
             await chat_handler.finish(Message(message_content) + MessageSegment.image(image_url))
         except ActionFailed:
@@ -267,9 +267,9 @@ async def handle_chat(
              await chat_handler.finish(Message(message_content) + MessageSegment.text(f" (未知错误： {e})"))
     elif video_match:
         video_url = video_match.group(0)
-        message_content = response.replace(video_url, "")
-        # 移除Markdown链接格式
-        message_content = re.sub(r'\[([^\]]+)\]\([^)]+\)', r'\1', message_content)
+        message_content = re.sub(r'!\[.*?\]\((.*?)\)', r'\1', response)
+        message_content = re.sub(r'\[.*?\]\((.*?)\)', r'\1', message_content)
+        message_content = message_content.replace(video_url, "").strip()
         try:
             await chat_handler.finish(Message(message_content) + MessageSegment.video(video_url))
         except ActionFailed:
