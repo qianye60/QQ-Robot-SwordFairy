@@ -52,3 +52,9 @@ empty_message_replies = [
     "内容？",
     "问题？"
 ]
+
+[chunk]
+enable = true
+words = ["||"]
+max_time = 10.0
+char_per_s = 5

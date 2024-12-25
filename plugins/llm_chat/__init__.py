@@ -38,6 +38,7 @@ os.environ["OPENAI_API_KEY"] = plugin_config.llm.api_key
 os.environ["OPENAI_BASE_URL"] = plugin_config.llm.base_url
 os.environ["GOOGLE_API_KEY"] = plugin_config.llm.google_api_key
 
+
 # 会话模板
 class Session:
     def __init__(self, thread_id: str):
@@ -119,6 +120,28 @@ def remove_trigger_words(text: str, message: Message) -> str:
                 break
     
     return text
+
+async def send_in_chunks(response: str) -> bool:
+    """
+    分段发送逻辑, 返回True表示已完成发送, 否则False
+    """
+    for sep in plugin_config.plugin.chunk.words:
+        if sep in response:
+            chunks = response.split(sep)
+            for i, chunk in enumerate(chunks):
+                chunk = chunk.strip()
+                if not chunk:
+                    continue
+                for word in plugin_config.plugin.chunk.words:
+                    chunk = chunk.replace(word, "")
+                chunk = chunk.strip()
+                if i == len(chunks) - 1:
+                    await chat_handler.finish(Message(chunk))
+                else:
+                    await chat_handler.send(Message(chunk))
+                    await asyncio.sleep(calculate_typing_delay(chunk))
+            return True
+    return False
 
 @chat_handler.handle()
 async def handle_chat(
@@ -279,11 +302,20 @@ async def handle_chat(
         except Exception as e:
             await chat_handler.finish(Message(message_content) + MessageSegment.text(f" (未知错误： {e})"))
     else:
-        await chat_handler.finish(Message(response))
+        if plugin_config.plugin.chunk.enable:
+            if await send_in_chunks(response):
+                return
+            await chat_handler.finish(Message(response))
+        else:
+            await chat_handler.finish(Message(response))
 
-
-
-
+def calculate_typing_delay(text: str) -> float:
+    """
+    计算模拟打字延迟
+    基于配置的每秒处理字符数计算延迟
+    """
+    delay = len(text) / plugin_config.plugin.chunk.char_per_s
+    return min(delay, plugin_config.plugin.chunk.max_time)
 
 group_chat_isolation = on_command(
     "chat group", 
@@ -388,5 +420,17 @@ async def handle_chat_command(args: Message = CommandArg()):
         plugin_config.plugin.enable_private = True
         plugin_config.plugin.enable_group = True
         await chat_command.finish("已开启对话功能")
+    elif command == "chunk":
+        if len(command_args) < 2:
+            await chat_command.finish(f"当前分开发送开关: {plugin_config.plugin.chunk.enable}")
+        chunk_str = command_args[1].strip().lower()
+        if chunk_str == "true":
+            plugin_config.plugin.chunk.enable = True
+            await chat_command.finish("已开启分开发送回复功能")
+        elif chunk_str == "false":
+            plugin_config.plugin.chunk.enable = False
+            await chat_command.finish("已关闭分开发送回复功能")
+        else:
+            await chat_command.finish("请输入 true 或 false")
     else:
         await chat_command.finish("无效的命令，请使用 'chat model <模型名字>' 或 'chat clear'.")

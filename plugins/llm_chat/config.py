@@ -15,6 +15,13 @@ class LLMConfig(BaseModel):
     system_prompt: Optional[str] = None
     max_context_messages: int = 10
 
+class ChunkConfig(BaseModel):
+    """分段发送配置"""
+    enable: bool = False
+    words: List[str] = ["||"]
+    max_time: float = 5.0
+    char_per_s: int = 5
+
 class PluginConfig(BaseModel):
     trigger_words: List[str] = []
     trigger_mode: List[str] = ["keyword", "at"]
@@ -25,6 +32,7 @@ class PluginConfig(BaseModel):
     max_sessions: int = Field(default=1000, gt=0)
     enable_username: bool = False
     empty_message_replies: List[str] = ["你好", "在呢", "我在听"]
+    chunk: ChunkConfig = ChunkConfig()  # 使用嵌套配置
 
 class Config(BaseModel):
     llm: LLMConfig
@@ -65,6 +73,12 @@ class Config(BaseModel):
                 max_sessions=toml_config["plugin"]["llm_chat"].get("max_sessions", 1000),
                 enable_username=toml_config["plugin"]["llm_chat"].get("enable_username", False),
                 empty_message_replies=toml_config["plugin"]["llm_chat"].get("empty_message_replies", ["你好", "在呢", "我在听"]),
+            chunk=ChunkConfig(
+                enable=toml_config.get("chunk", {}).get("enable", False),
+                words=toml_config.get("chunk", {}).get("words", ["||"]),
+                max_time=toml_config.get("chunk", {}).get("max_time", 5.0),
+                char_per_s=toml_config.get("chunk", {}).get("char_per_s", 5)
+            )
             )
             
             return cls(llm=llm_config, plugin=plugin_config)
