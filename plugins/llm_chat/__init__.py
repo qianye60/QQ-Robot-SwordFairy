@@ -267,11 +267,19 @@ async def handle_chat(
             else:
                 response = "对不起，我没有理解您的问题。"
     except Exception as e:
-        print(f"调用 LangGraph 时发生错误: {e}")
+        error_message = str(e)
+        print(f"调用 LangGraph 时发生错误: {error_message}")
+        
         async with sessions_lock:
             if thread_id in sessions:
                 del sessions[thread_id]
-        response = f"""卧槽，报错了：{e}\n尝试自行修复中，聊聊别的吧！"""
+        
+        # 只处理两种情况：list strip错误和其他所有错误
+        if "'list' object has no attribute 'strip'" in error_message:
+            print("max_tokens设置过小，导致生成的工具参数不完整")
+            response = "太长了发不出来，换一个吧"
+        else:
+            response = f"卧槽，报错了：{error_message}\n尝试自行修复中，聊聊别的吧！"
     # 检查是否有图片或视频链接，并发送图片或视频或文本消息
     image_match = re.search(r'https?://[^\s]+?\.(?:png|jpg|jpeg|gif|bmp|webp)', response, re.IGNORECASE)
     video_match = re.search(r'https?://[^\s]+?\.(?:mp4|avi|mov|mkv)', response, re.IGNORECASE)
