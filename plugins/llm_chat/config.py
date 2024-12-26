@@ -34,9 +34,16 @@ class PluginConfig(BaseModel):
     empty_message_replies: List[str] = ["你好", "在呢", "我在听"]
     chunk: ChunkConfig = ChunkConfig()  # 使用嵌套配置
 
+class ResponseConfig(BaseModel):
+    """回复消息配置"""
+    empty_message_replies: List[str] = ["你好", "在呢", "我在听"]
+    token_limit_error: str = "太长了发不出来，换一个吧"
+    general_error: str = "卧槽，报错了，尝试自行修复中，聊聊别的吧！"
+
 class Config(BaseModel):
     llm: LLMConfig
     plugin: PluginConfig
+    responses: ResponseConfig = ResponseConfig()
 
     @classmethod
     def load_config(cls) -> "Config":
@@ -81,7 +88,13 @@ class Config(BaseModel):
             )
             )
             
-            return cls(llm=llm_config, plugin=plugin_config)
+            responses_config = ResponseConfig(
+                empty_message_replies=toml_config["responses"].get("empty_message_replies", ResponseConfig().empty_message_replies),
+                token_limit_error=toml_config["responses"].get("token_limit_error", ResponseConfig().token_limit_error),
+                general_error=toml_config["responses"].get("general_error", ResponseConfig().general_error)
+            )
+            
+            return cls(llm=llm_config, plugin=plugin_config, responses=responses_config)
         except Exception as e:
             raise RuntimeError(f"Failed to load config.toml: {str(e)}")
 
