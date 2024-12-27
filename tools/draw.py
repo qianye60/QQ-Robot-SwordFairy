@@ -54,7 +54,7 @@ def _draw_via_fal(prompt: str, image_size: str = "square_hd", style: str = "any"
         url = result['images'][0].get('url', '')
         if url:
             _save_image(url)
-            return f"绘图完成: {url}"
+            return url
     return None
 
 def _convert_size_for_glm(fal_size: str) -> str:
@@ -106,7 +106,7 @@ def _draw_via_glm(prompt: str, size: str = "square_hd") -> str:
             url = result["data"][0].get("url")
             if url:
                 _save_image(url)
-                return f"绘图完成: {url}"
+                return url
             else:
                 return f"未找到图片URL, 响应数据: {result}"
         else:
