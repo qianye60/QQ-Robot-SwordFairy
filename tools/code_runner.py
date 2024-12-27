@@ -304,11 +304,12 @@ def base64_code(source_code, stdin=None):
 
 @tool
 def code_runner(source_code: str, language: str, stdin: str = None):
-    """运行代码并返回详细的运行数据和结果。
+    """Run the code and return detailed runtime data and results.
+
     Args:
-        source_code: 格式正确的源代码
-        language: 编程语言.  可选：python3,python2,Assembly,Bash,C,C++,Clojure,C#,COBOL,Common Lisp,D,Elixir,F#,Fortran,Go,Groovy,Haskell,Java,JavaScript,Kotlin,Lua,OCaml,Octave,Pascal,Perl,PHP,Plain Text,Python,Python2,R,Ruby,Rust,Scala,SQL,Swift,TypeScript,Visual Basic.Net
-        stdin: 需要运行程序的标准输入，可选，默认为 None
+        source_code: Properly formatted source code
+        language: Programming language. Optional: python3, python2, Assembly, Bash, C, C++, Clojure, C#, COBOL, Common Lisp, D, Elixir, F#, Fortran, Go, Groovy, Haskell, Java, JavaScript, Kotlin, Lua, OCaml, Octave, Pascal, Perl, PHP, Plain Text, Python, Python2, R, Ruby, Rust, Scala, SQL, Swift, TypeScript, Visual Basic .Net
+        stdin: Standard input required to run the program, optional, defaults to None
     """
     language_id = _find_best_lang_match_(language)
     if language_id is None:
@@ -319,7 +320,7 @@ def code_runner(source_code: str, language: str, stdin: str = None):
     base64_stdin = base64_result.get("stdin")
     result = submit_code(base64_source_code, language_id, base64_stdin)
     formatted_result = format_submission_result(result)
-    return formatted_result
+    return f"Tool Response: {formatted_result}"
 
 
 tools = [code_runner]
