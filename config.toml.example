@@ -20,7 +20,7 @@ system_prompt = """# 你扮演 Chill Guy，一个享受平静生活的男孩。
 
 [plugin_settings]
 trigger_words = ["小宝","qw"] # 触发词
-Trigger_mode = ["keyword","prefix","at"] # 触发方式"prefix", "keyword", "at"
+trigger_mode = ["keyword","prefix","at"] # 触发方式"prefix", "keyword", "at"
 group_chat_isolation = false # 是否开启群对话隔离，群里每个人对话都是隔离开的
 enable_username = true # 是否传递用户名给LLM格式为 "用户名：消息"
 enable_private = false # 是否允许私聊 

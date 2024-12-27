@@ -153,15 +153,15 @@ memos_config = config.get("memos", {})
 @tool
 def memos_manage(operation: str, create_content: str = None, search_keyword: str = None, 
                 delete_id: str = None, limit: int = None, user_name: str = None):
-    """Create, retrieve, and delete memos, and perform operations on memos.
+    """创建、检索、删除备忘录, 对memos进行操作
 
     Args:
-        operation: The type of operation, which can be "create", "search", or "delete".
-        create_content: The content of the memo to be created. Use ###$$%%% as a separator for multiple memos (only used when the operation is "create"). Optional.
-        search_keyword: The keyword(s) to search for memos. Use commas to separate multiple keywords. If not provided, the latest memos will be returned (only used when the operation is "search"). Optional.
-        delete_id: The ID(s) of the memo(s) to be deleted. Multiple IDs can be separated by commas (only used when the operation is "delete"). Optional.
-        limit: Limits the number of search results (only used when the operation is "search"). Optional.
-        user_name: When the operation is "create", it is added to the content as a prefix; when the operation is "search", it is used as a search keyword. Optional.
+        operation: 操作类型，可选值为 "create", "search", "delete".
+        create_content: 创建备忘录的内容，使用 ###$$$%%% 作为多条备忘录的分隔符 (仅当 operation 为 "create" 时使用).可选
+        search_keyword: 检索备忘录的关键词,多个关键词以逗号分隔,不传则返回最新备忘录 (仅当 operation 为 "search" 时使用). 可选
+        delete_id: 要删除的备忘录的 id,支持多个id以逗号分隔 (仅当 operation 为 "delete" 时使用). 可选
+        limit: 限制搜索结果数量 (仅当 operation 为 "search" 时使用). 可选
+        user_name: 当operation为create时作为前缀添加到内容中；当operation为search时作为搜索关键词使用. 可选
     """
     global memos_config
     if (memos_config is None):
