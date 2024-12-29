@@ -8,25 +8,26 @@ from datetime import datetime
 import json
 from .config import config
 from .prompt.prompt import prompt_all
+from langchain_core.tools import tool
 
 root_path = Path(__file__).resolve().parents[1]
 temp_server_dir = root_path / "temp_server"
 temp_server_dir.mkdir(parents=True, exist_ok=True)
 
-draw_config = config.get("draw", {})
+create_art_config = config.get("create_art", {})
 os.environ.update({
-    "FAL_KEY": draw_config.get("fal_key"),
-    "OPENAI_API_KEY": draw_config.get("openai_api_key"),
-    "OPENAI_BASE_URL": draw_config.get("openai_base_url")
+    "FAL_KEY": create_art_config.get("fal_key"),
+    "OPENAI_API_KEY": create_art_config.get("openai_api_key"),
+    "OPENAI_BASE_URL": create_art_config.get("openai_base_url")
 })
 
 def _optimize_prompt(prompt: str) -> str:
     """使用 AI 优化绘图提示词"""
     client = OpenAI()
     completion = client.chat.completions.create(
-        model=draw_config.get("model"),
+        model=create_art_config.get("model"),
         messages=[
-            {"role": "system", "content": prompt_all.get("draw")},
+            {"role": "system", "content": prompt_all.get("create_art")},
             {"role": "user", "content": prompt}
         ]
     )
@@ -80,7 +81,7 @@ def _draw_via_glm(prompt: str, size: str = "square_hd") -> str:
     glm_size = _convert_size_for_glm(size)
     headers = {
         "Content-Type": "application/json",
-        "Authorization": f"Bearer {draw_config.get('glm_key')}"
+        "Authorization": f"Bearer {create_art_config.get('glm_key')}"
     }
     
     payload = {
@@ -142,11 +143,10 @@ def _save_image(url: str) -> None:
     except Exception as e:
         print(f"保存图像出错: {e}")
 
-from langchain_core.tools import tool
 
 @tool
-def draw(prompt: str, image_size: str = "square_hd", style: str = "any", provider: str = "glm"):
-    """Draw an image according to the requirements and return the image link.
+def create_art(prompt: str, image_size: str = "square_hd", style: str = "any", provider: str = "glm"):
+    """Create artwork based on the requirements and return an image link.
 
     Args:
         prompt: Description of the content to be drawn.
@@ -163,4 +163,4 @@ def draw(prompt: str, image_size: str = "square_hd", style: str = "any", provide
     else:
         return "不支持的绘图提供商"
 
-tools = [draw]
+tools = [create_art]

@@ -1,6 +1,6 @@
 [tools]
 builtin = ["tavily_search"]  # 启用内置的tavily搜索工具
-# 工具有analyze_image,code_runner, divination, draw, get_github_trending, get_time, get_weather_data, jina_fact_checking, jina_reader, jina_search, picture_api
+# 工具有analyze_image,code_runner, divination, create_art, get_github_trending, get_time, get_weather_data, jina_fact_checking, jina_reader, jina_search, picture_api
 enabled = ["get_time"]  # 启用外部工具列表
 
 [tavily]
@@ -26,7 +26,7 @@ api_key = ""  # 在此填入占卜服务的API密钥
 base_url = ""  # 占卜服务的基础URL
 model = "llama-3.3-70b-instruct"  # 使用的模型名称
 
-[draw]
+[create_art]
 fal_key = ""  # 在此填入FAL服务的API密钥
 openai_api_key = ""  # 在此填入OpenAI API密钥
 openai_base_url = ""  # OpenAI服务的基础URL

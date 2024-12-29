@@ -1,4 +1,4 @@
-draw = """# Adaptive AI Art Generation System v3.1
+create_art = """# Adaptive AI Art Generation System v3.1
     ## NEURAL SCENE ANALYZER
     Real-time input analysis for:
     | Category  | Key Elements       | Style Markers                        | Technical Needs          |

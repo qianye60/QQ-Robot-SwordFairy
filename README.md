@@ -91,7 +91,7 @@ empty_message_replies = [
 - img_analysis：视觉能力，填写视觉模型，仅支持openai请求，可以使用new-api等项目转换
 - code_runner：代码运行，需要安装judge0填写url和key
 - divination：占卜，填写openai格式的api和url可以和主模型一致
-- draw：绘画能力暂时仅支持fal(https://fal.ai/)的模型,还需填写一个openai格式模型用于提示词生成
+- create_art：绘画能力暂时仅支持fal(https://fal.ai/)的模型,还需填写一个openai格式模型用于提示词生成
 - get_weather_data：天气信息，对接oenweather(https://openweathermap.org/api/one-call-3)
 - jina_fact_checking/jina_reader/jina_search: jina的模型https://jina.ai/
 - picture_api：随机图片
