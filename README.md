@@ -1,4 +1,5 @@
-# 🤖 LLMQ-Horizon QQ_Chatbot
+[https://qianyedrive.netqianye.com/d/b_c9e21882cfae7e048b761f4f7c22205a.jpg?sign=Fz4v66FmXXyWeGVJdoghmF8P2YcsKWpikPXD1M9hpVI=:0](https://qianyedrive.netqianye.com/d/b_c9e21882cfae7e048b761f4f7c22205a.jpg?sign=Fz4v66FmXXyWeGVJdoghmF8P2YcsKWpikPXD1M9hpVI=:0)
+# 🤖 LLMQ-Horizon QQ_Chatbot (剑仙版)
 
 一个基于 NoneBot2 和 LangGraph 的QQ_Chatbot。
 
@@ -17,11 +18,11 @@
 
 ## 部署
 ```
-git clone https://github.com/Mgrsc/LLMQ-Horizon.git
+git clone https://github.com/qianye60/QQ-Robot-SwordFairy.git
 
-# 把示例文件改名
-mv config-tools.toml.example config-tools.toml
-mv config.toml.example config.toml
+# 修改两个toml文件
+config-tools.toml
+config.toml
 
 # 参考下面编辑配置文件
 
@@ -37,14 +38,6 @@ docker compose down
 ```
 cd napcat/config/
 mv onebot11_qq.json onebot11_<你的QQ>.json #改为你的qq号
-```
-
-### 编辑compose
-
-```
-#填入超级用户QQ，用于命令执行
-    environment:
-      - ACCOUNT=<qq>
 ```
 
 ### 编辑config.toml
