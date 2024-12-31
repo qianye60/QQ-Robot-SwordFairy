@@ -7,12 +7,11 @@ import os
 picture = config.get("picture_api", {})
 api = picture.get("api")
 
-@tool(parse_docstring=True)
-def picture_api(select_type: str) -> str:
-  """Select a suitable image classification request random image API from the variable api_type_list based on the request, store the image on the server, and return the image link.
-
+@tool
+def picture_api(select_type: str="动漫"):
+  """根据请求从变量api_type_list选择合适的图片分类请求随机图片api，将图片存储到服务器并且返回图片链接。
   Args:
-    select_type: Match the image type based on the user's request with priority. For example, "beautiful pictures" will match "beautiful", "anime pictures" will match "anime", and "shesh pictures" will match "shesh".
+    select_type:优先根据用户请求匹配图片类型，图片类型有["动漫","美好"]，用户没有指定或是指定列表中不存在的将默认使用"动漫"类型。
   """
   try:
     # 获取当前脚本的绝对路径
