@@ -319,7 +319,7 @@ async def handle_chat(
         message_content = re.sub(r'\[.*?\]\((.*?)\)', r'\1', message_content)
         message_content = message_content.replace(image_url, "").strip()
         try:
-            await chat_handler.finish(Message(message_content) + MessageSegment.image(image_url))
+            await chat_handler.finish(MessageSegment.image(image_url))
         except ActionFailed:
             await chat_handler.finish(Message(message_content) + MessageSegment.text(" (图片发送失败)"))
         except MatcherException:
@@ -332,7 +332,7 @@ async def handle_chat(
         message_content = re.sub(r'\[.*?\]\((.*?)\)', r'\1', message_content)
         message_content = message_content.replace(video_url, "").strip()
         try:
-            await chat_handler.finish(Message(message_content) + MessageSegment.video(video_url))
+            await chat_handler.finish(MessageSegment.video(video_url))
         except ActionFailed:
             await chat_handler.finish(Message(message_content) + MessageSegment.text(" (视频发送失败)"))
         except MatcherException:
@@ -345,7 +345,7 @@ async def handle_chat(
         message_content = re.sub(r'\[.*?\]\((.*?)\)', r'\1', message_content)
         message_content = message_content.replace(audio_url, "").strip()
         try:
-            await chat_handler.finish(Message(message_content) + MessageSegment.record(audio_url))
+            await chat_handler.finish(MessageSegment.record(audio_url))
         except ActionFailed:
             await chat_handler.finish(Message(message_content) + MessageSegment.text(" (音频发送失败)"))
         except MatcherException:
