@@ -42,14 +42,14 @@ mv onebot11_qq.json onebot11_<你的QQ>.json #改为你的qq号
 ```
 
 ### 编辑config.toml
-
+没有的东西直接留空,只需要一个厂家的接口密钥，记得该模型名
 ```
 [llm]
 model = "gpt-4o" # 模型必须支持fc否则无法使用tools
 superusers = "1221212" # 超级用户QQ
-groq_api_key = "xxxxxxxxxx"
-google_api_key = "xxxxxxxxxxx"
-api_key = "xxxxxxxx"
+groq_api_key = ""
+google_api_key = ""
+api_key = ""
 base_url = "https://xxx.xxx.com/v1"
 temperature = 0.4 # 注意范围是0-1不要调太大
 command_start = "?" # 触发命令前缀
