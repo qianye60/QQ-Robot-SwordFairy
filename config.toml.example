@@ -1,9 +1,9 @@
 # 模型设置groq仅支持"llama3-groq-70b-8192-tool-use-preview","llama-3.3-70b-versatile"
 [llm]
 model = "gemini-2.0-flash-exp" # LLM模型名称，自动切换gemini和groq和openai
-groq_api_key = "gsk_xxxxxxx""  # grop密钥
-google_api_key = "xxxxxxxxxx" # Google API密钥
-api_key = "sk-xxxxxxxx"  # OpenAI API密钥
+groq_api_key = ""  # grop密钥
+google_api_key = "" # Google API密钥
+api_key = ""  # OpenAI API密钥
 base_url = "https://api.openai.com/v1" # OpenAI API基础URL，默认openai官方
 temperature = 0.7  # 生成文本的随机性 (0-1)
 top_p = 1 # 核采样
