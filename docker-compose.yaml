@@ -15,14 +15,16 @@ services:
       - llmq
 
   llmq:
-    image: bitfennec/llmq-horizon:latest
-    container_name: llmq-horizon
+    image: qianye60/qq-robot-swordfairy:latest
+    container_name: qq-robot-swordfairy
     restart: always
     ports:
       - "40000:5000"
     volumes:
       - ./config.toml:/app/config.toml
       - ./config-tools.toml:/app/config-tools.toml
+      - ./tools:/app/tools
       - ./temp_server:/app/temp_server
+      - ./plugins/llm_chat:/app/plugins/llm_chat
     environment:
       - TZ=Asia/Shanghai
