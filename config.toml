@@ -1,4 +1,4 @@
-[llm]
+[llm]#没有的东西直接留空,只需要一个厂家的接口密钥，记得该模型名
 # LLM模型名称 ["gemini-2.0-flash-exp","llama3-groq-70b-8192-tool-use-preview","gpt-4o",....]
 model = "gemini-2.0-flash-exp"
 # Google API密钥
