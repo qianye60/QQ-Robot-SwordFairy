@@ -1,7 +1,7 @@
 [tools]
 builtin = []  # 启用内置的tavily搜索工具"tavily_search"
 # 工具有analyze_image,code_runner, divination, create_art, get_github_trending, get_time, get_weather_data, jina_fact_checking, jina_reader, jina_search, svg_card
-enabled = ["get_time"]  # 启用外部工具列表
+enabled = ["get_time","picture_api","web_api"]  # 启用外部工具列表
 
 [tavily]
 api_key = ""  # 在此填入你的Tavily API密钥
@@ -44,4 +44,4 @@ claude_api_key = ""  # 在此填入Claude API密钥
 claude_base_url = ""  # Claude服务的基础URL
 
 [picture_api]
-api = ""
+api = "https://picture.netqianye.com/api.php?type="
