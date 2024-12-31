@@ -150,9 +150,10 @@ def _delete_memo(base_url, headers, memo_ids):
     return {"results": results}
 
 memos_config = config.get("memos", {})
-@tool
+
+@tool(parse_docstring=True)
 def memos_manage(operation: str, create_content: str = None, search_keyword: str = None, 
-                delete_id: str = None, limit: int = None, user_name: str = None):
+                delete_id: str = None, limit: int = None, user_name: str = None) -> str:
     """Create, retrieve, and delete memos, operate on memos, and use memos.
 
     Args:

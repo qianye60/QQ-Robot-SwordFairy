@@ -12,12 +12,12 @@ client = OpenAI(
     base_url=img_config.get("new_base_url"),
 )
 
-@tool
+@tool(parse_docstring=True)
 def analyze_image(query: str, image_input: str) -> str:
     """Get and return the content and information in the image according to the query requirements.  It can also analyze the image.
 
     Args:
-        query: The image information to be retrieved. e.g., "What's in the image" "Describe the image in detail" "Where is the sphere in the image" "How many people are in the image" "Give life advice based on the astrolabe in the image"
+        query: The image information to be retrieved.
         image_input: The image source, which can be an image URL (http:// or https://), a Base64 encoded image string, or a Base64 image string with the "image/" prefix.
     """
 

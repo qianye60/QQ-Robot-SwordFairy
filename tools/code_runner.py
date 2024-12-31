@@ -324,8 +324,8 @@ def base64_code(source_code, stdin=None):
     return result
 
 
-@tool
-def code_runner(source_code: str, language: str, stdin: str = None):
+@tool(parse_docstring=True)
+def code_runner(source_code: str, language: str, stdin: str = None) -> str:
     """Run the code and return detailed runtime data and results.
 
     Args:

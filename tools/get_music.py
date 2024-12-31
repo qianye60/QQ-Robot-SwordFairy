@@ -15,8 +15,10 @@ def _get_hhlq_music(music_name):
     except Exception as e:
         return f"Failed to get music link: {str(e)}"
 
-def get_music(music_name: str, provider: str = "hhlq"):
+@tool(parse_docstring=True)
+def get_music(music_name: str, provider: str = "hhlq") -> str:
     """Search and get music
+    
     Args:
         provider: Music provider. Available values: hhlq
         music_name: Music name/Song title/Music title

@@ -144,8 +144,8 @@ def _save_image(url: str) -> None:
         print(f"保存图像出错: {e}")
 
 
-@tool
-def create_art(prompt: str, image_size: str = "square_hd", style: str = "any", provider: str = "glm"):
+@tool(parse_docstring=True)
+def create_art(prompt: str, image_size: str = "square_hd", style: str = "any", provider: str = "glm") -> str:
     """Create artwork based on the requirements and return an image link.
 
     Args:

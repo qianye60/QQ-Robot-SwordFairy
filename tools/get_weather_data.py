@@ -8,8 +8,8 @@ import pytz
 weather_config = config.get('openweather', {})
 os.environ["OPENWEATHER_API_KEY"] = weather_config.get('api_key', '')
 
-@tool
-def get_weather_data(location: str, country_code: str, query_time: str = None, query_type: str = 'current'):
+@tool(parse_docstring=True)
+def get_weather_data(location: str, country_code: str, query_time: str = None, query_type: str = 'current') -> str:
     """Retrieve weather data for a specific location and time.
 
     Args:

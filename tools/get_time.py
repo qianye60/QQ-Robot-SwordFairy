@@ -2,8 +2,8 @@ import datetime
 import pytz
 from langchain_core.tools import tool
 
-@tool
-def get_time(timezone: str, format: str = "%Y-%m-%d %H:%M:%S"):
+@tool(parse_docstring=True)
+def get_time(timezone: str, format: str = "%Y-%m-%d %H:%M:%S") -> str:
     """Get the current time in the specified time zone and return the time string according to the specified format.
 
     Args:
