@@ -1,4 +1,4 @@
-<img src="https://qianyedrive.netqianye.com/d/b_c9e21882cfae7e048b761f4f7c22205a.jpg?sign=Fz4v66FmXXyWeGVJdoghmF8P2YcsKWpikPXD1M9hpVI=:0">
+<img src="https://qianyedrive.netqianye.com/d/b_c9e21882cfae7e048b761f4f7c22205a.jpg?sign=Fz4v66FmXXyWeGVJdoghmF8P2YcsKWpikPXD1M9hpVI=:0" width="150" height="150">
 # 🤖 LLMQ-Horizon QQ_Chatbot (剑仙版)
 
 一个基于 NoneBot2 和 LangGraph 的QQ_Chatbot。
