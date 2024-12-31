@@ -41,7 +41,7 @@ cd napcat/config/
 mv onebot11_qq.json onebot11_<你的QQ>.json #改为你的qq号
 ```
 
-### 编辑config.toml
+### 编辑config.toml(只有openai可以中转，其他都是官方接口)
 没有的东西直接留空,只需要一个厂家的接口密钥，记得该模型名
 ```
 [llm]
