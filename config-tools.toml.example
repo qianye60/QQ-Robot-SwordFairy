@@ -1,6 +1,6 @@
 [tools]
 builtin = ["tavily_search"]  # 启用内置的tavily搜索工具
-# 工具有analyze_image,code_runner, divination, create_art, get_github_trending, get_time, get_weather_data, jina_fact_checking, jina_reader, jina_search, picture_api
+# 工具有analyze_image,code_runner, divination, create_art, get_github_trending, get_time, get_weather_data, jina_fact_checking, jina_reader, jina_search, picture_api, web_api
 enabled = ["get_time"]  # 启用外部工具列表
 
 [tavily]
