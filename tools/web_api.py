@@ -7,22 +7,33 @@ import re
 
 import os
 @tool(parse_docstring=True)
-def web_api(webside:str=None,music:str=None,select_api:str=None) -> str:
+def web_api(webside:str=None,music:str=None,video:str=None,select_api:str=None) -> str:
     """根据用户请求合理判断并请求相应的api接口然后返回。
     
     Args:
       select_api:
           根据用户请求，从下列的api功能中寻找类似功能，键是功能名字，将要和变量的值一样，值是触发所需要的含义
-            1、"小姐姐短视频"，["关键含义，随机小姐姐、随机短视频"],
+            1、"短视频"，["关键含义，视频、随机短视频、短视频"],
             2、"TCPing"，["关键含义"，"测试网站、ping网站"],
             3、"点歌"，"["关键含义"，"点歌、歌曲、网易云歌曲"]"
-      webside:str,网站网址'(必填)
-      music:str,音乐名称
+      webside:str,网站网址。
+      music:str,音乐名称。
+      video:str,根据用户选择视频类型,从这[“小姐姐”、“纯情女高”、“蛇姐”、“玉足”]其中选择一个，意思或读音大概即可，都匹配不上就选择“小姐姐”。
     """
     try:
-      if select_api == "小姐姐短视频":
-          response_url = requests.get("http://tucdn.wpon.cn/api-girl/index.php?wpon=url")
-          url = "https://"+response_url.text[2:]
+      if select_api == "短视频":
+          if video == "玉足":
+            response = requests.get("https://api.yuafeng.cn/API/ly/yzxl.php")
+            url = response.url
+          elif video == "纯情女高":
+            response = requests.get("https://api.yuafeng.cn/API/ly/cqng.php")
+            url = response.url
+          elif video == "蛇姐":
+            response = requests.get("https://api.yuafeng.cn/API/ly/sjxl.php")
+            url = response.url
+          else:
+            response = requests.get("http://tucdn.wpon.cn/api-girl/index.php?wpon=url")
+            url = "https://"+response.text[2:]
           print(url)
           return url
       elif select_api == "TCPing":
