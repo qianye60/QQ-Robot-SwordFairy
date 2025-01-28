@@ -49,7 +49,7 @@
    ```bash
    # 1. 克隆项目
    git clone https://github.com/qianye60/QQ-Robot-SwordFairy.git
-   cd LLMQ-Horizon
+   cd QQ-Robot-SwordFairy
    
    # 2. 准备配置文件
    cp config-tools.toml.example config-tools.toml
