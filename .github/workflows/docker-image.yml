@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - main
+
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
@@ -24,14 +25,19 @@ jobs:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
 
-      - name: Build 和 push Docker image
+      - name: Set Docker tags
+        id: set-tags
+        run: |
+          if [ ${{ github.ref }} = 'refs/heads/main' ]; then
+            echo "tags=qianye60/qq-robot-swordfairy:latest,qianye60/qq-robot-swordfairy:${{ steps.timestamp.outputs.timestamp }}" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Build and push Docker image
         uses: docker/build-push-action@v6
         with:
           context: .
           push: true
-          tags: |
-            qianye60/qq-robot-swordfairy:latest
-            qianye60/qq-robot-swordfairy:${{ steps.timestamp.outputs.timestamp }}
+          tags: ${{ steps.set-tags.outputs.tags }}
           platforms: linux/amd64
           cache-from: type=registry,ref=qianye60/qq-robot-swordfairy:buildcache
           cache-to: type=registry,ref=qianye60/qq-robot-swordfairy:buildcache,mode=max
